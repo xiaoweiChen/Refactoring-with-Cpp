@@ -1,0 +1,117 @@
+
+现代 C++ 提供了智能指针(如 std::unique\_ptr 和 std::shared\_ptr)，以便更安全、更高效地管理动态内存。通常，最好使用 std::unique\_ptr 而不是原始指针来获得独占所有权。当多个参与者需要共享资源所有权时，可以使用 std::shared\_ptr。但是，存在与 std::shared\_ptr 滥用相关的常见问题。
+
+\mySubsubsection{3.5.1}{构建 std::shared\_ptr}
+
+使用 std::shared\_ptr 的构造函数创建对象会导致控制块和管理对象的单独分配：
+
+\begin{cpp}
+std::shared_ptr<int> create() {
+    std::shared_ptr<int> ptr(new int(42));
+    return ptr;
+}
+\end{cpp}
+
+更好的方法是使用 std::make\_shared，它将分配组合成一个内存块，从而提高性能和缓存局部性：
+
+\begin{cpp}
+std::shared_ptr<int> create() {
+    return std::make_shared<int>(42);
+}
+\end{cpp}
+
+\mySubsubsection{3.5.2}{按值复制std::shared\_ptr}
+
+在同一个线程堆栈内按值复制 std::shared\_ptr 效率较低，因为引用计数器是原子的。建议通过引用传递 std::shared\_ptr：
+
+\begin{cpp}
+void process_shared_ptr(std::shared_ptr<int> ptr) {
+    // Inefficient: copies shared_ptr by value
+}
+
+void process_shared_ptr(const std::shared_ptr<int>& ptr) {
+    // Efficient: passes shared_ptr by reference
+}
+\end{cpp}
+
+\mySubsubsection{3.5.3}{与 std::shared\_ptr 的循环依赖}
+
+当两个或多个 std::shared\_ptr 实例相互引用时，可能会发生循环依赖，从而导致引用计数无法达到零并导致内存泄漏。请考虑以下示例：
+
+\begin{cpp}
+struct B;
+
+struct A {
+    std::shared_ptr<B> b_ptr;
+    ~A() { std::cout << "A destroyed\n"; }
+};
+
+struct B {
+    std::shared_ptr<A> a_ptr;
+    ~B() { std::cout << "B destroyed\n"; }
+};
+
+void create_cycle() {
+    auto a = std::make_shared<A>();
+    auto b = std::make_shared<B>();
+    a->b_ptr = b;
+    b->a_ptr = a;
+}
+\end{cpp}
+
+在这种情况下， A 和 B 相互引用，形成一个阻止其销毁的循环。可以使用 std::weak\_ptr 打破循环来解决此问题：
+
+\begin{cpp}
+struct B;
+
+struct A {
+    std::weak_ptr<B> b_ptr; // Use weak_ptr to break the cycle
+    ~A() { std::cout << "A destroyed\n"; }
+};
+
+struct B {
+    std::shared_ptr<A> a_ptr;
+    ~B() { std::cout << "B destroyed\n"; }
+};
+
+void create_cycle() {
+    auto a = std::make_shared<A>();
+    auto b = std::make_shared<B>();
+    a->b_ptr = b;
+    b->a_ptr = a;
+}
+\end{cpp}
+
+\mySubsubsection{3.5.4}{检查 std::weak\_ptr 的状态}
+
+使用 std::weak\_ptr 时的一个常见错误是使用 expired() 检查其状态，然后锁定它，这不是线程安全的：
+
+\begin{cpp}
+std::weak_ptr<int> weak_ptr = some_shared_ptr;
+
+void check_and_use_weak_ptr() {
+    if (!weak_ptr.expired()) {
+        // This is not thread-safe
+        auto shared_ptr = weak_ptr.lock();
+        shared_ptr->do_something();
+    }
+}
+\end{cpp}
+
+正确的方法是锁定 std::weak\_ptr 并检查返回的 std::shared\_ptr 不为空：
+
+\begin{cpp}
+void check_and_use_weak_ptr_correctly() {
+    // This is thread-safe
+    if (auto shared_ptr = weak_ptr.lock()) {
+        // Use shared_ptr
+        shared_ptr->do_something();
+    }
+}
+\end{cpp}
+
+缺乏 C++ 知识可能会导致各种问题，从内存管理错误到低效且不可读的代码。通过及时了解现代 C++ 功能和最佳实践，开发人员可以编写更安全、更高效且更易于维护的代码。持续学习和适应是克服这些挑战和提高整体代码质量的关键。 Bob 和 Alice 的例子强调了理解和应用现代 C++ 实践的重要性，以避免常见的陷阱并生成高质量的代码。
+
+
+
+

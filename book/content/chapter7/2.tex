@@ -1,0 +1,484 @@
+
+继承和组合是两个基本的 OOP 概念，它们使得在 C++ 中创建复杂且可重用的软件设计成为可能。它们促进代码重用并有助于对现实世界的关系进行建模，尽管它们的操作方式不同。
+
+继承允许一个类(称为派生类或子类)从另一个类(基类或超类)继承属性和行为。这使派生类能够重用基类中的代码，同时扩展或覆盖其功能。例如，考虑 BaseSocket 类及其派生类 TcpSocket 和 UdpSocket。派生类继承了 BaseSocket 的基本功能并添加了它们的具体实现：
+
+\begin{cpp}
+class BaseSocket {
+public:
+    virtual ssize_t send(const std::vector<uint8_t>& data) = 0;
+    virtual ~BaseSocket() = default;
+};
+
+class TcpSocket : public BaseSocket {
+public:
+    ssize_t send(const std::vector<uint8_t>& data) override {
+        // Implement TCP-specific send logic here
+    }
+};
+
+class UdpSocket : public BaseSocket {
+public:
+    ssize_t send(const std::vector<uint8_t>& data) override {
+        // Implement UDP-specific send logic here
+    }
+};
+\end{cpp}
+
+在此示例中， TcpSocket 和 UdpSocket 类继承自 BaseSocket，展示了继承如何促进代码重用并建立"is-a"关系。继承还支持多态性，允许将派生类的对象视为基类的实例，从而实现动态方法绑定。
+
+另一方面，组合涉及通过包含其他类的对象来创建类。类不是从基类继承，而是由来自其他类的一个或多个对象组成，用于实现所需的功能。这代表了一种"拥有"关系。例如，考虑一个可以拥有 BaseSocket 的 CommunicationChannel 类。 CommunicationChannel 类使用BaseSocket 对象来实现其通信功能，演示了组合：
+
+\begin{cpp}
+class CommunicationChannel {
+    public:
+    CommunicationChannel(std::unique_ptr<BaseSocket> sock) : _socket(sock) {}
+
+    bool transmit(const std::vector<uint8_t>& data) {
+        size_t total_sent = 0;
+        size_t data_size = data.size();
+
+        while (total_sent < data_size) {
+            ssize_t bytesSent = _socket->send({data.begin() + total_sent, data.end()});
+            if (bytesSent < 0) {
+                std::cerr << "Error sending data." << std::endl;
+                return false;
+            }
+            total_sent += bytesSent;
+        }
+
+        std::cout << "Communication channel transmitted " << total_sent << " bytes." << std::endl;
+        return true;
+    }
+private:
+    std::unique_ptr<BaseSocket> _socket;
+};
+int main() {
+    TcpSocket tcp;
+    CommunicationChannel channel(std::make_unique<TcpSocket>());
+    std::vector<uint8_t> data = {1, 2, 3, 4, 5};
+
+    if (channel.transmit(data)) {
+        std::cout << "Data transmitted successfully." << std::endl;
+    } else {
+        std::cerr << "Data transmission failed." << std::endl;
+    }
+
+    return 0;
+}
+\end{cpp}
+
+在此示例中， CommunicationChannel 类包含一个 BaseSocket 对象并使用它来实现其功能。 tr ansmit 方法以块的形式发送数据，直到所有数据都发送完毕，并检查是否有错误(当返回值小于 0 时)。这说明了组合如何提供灵活性，允许在运行时动态组装对象。它还通过包含对象并仅公开必要的接口来促进更好的封装，从而避免类之间的紧密耦合，并使代码更加模块化且更易于维护。
+
+总之，继承和组合都是 C++ 中创建可重用和可维护代码的必备工具。继承适用于具有明确层次关系且需要多态性的场景，而组合则非常适合从更简单的组件组装复杂行为，提供灵活性和更好的封装。了解何时使用每种方法是有效面向对象设计的关键。
+
+\mySubsubsection{7.2.1}{C++ 中的继承的演变}
+
+最初，继承被视为减少代码重复和增强代码表达能力的强大工具。它允许创建从基类继承属性和行为的派生类。然而，随着 C++ 在复杂系统中的使用越来越多，继承作为一刀切解决方案的局限性变得显而易见。
+
+\mySubsubsection{7.2.2}{二进制级别继承的实现}
+
+有趣的是，在二进制级别上， C++ 中的继承实现方式与组合类似。本质上，派生类在其结构中包含基类的实例。这可以在简化的 ASCII 图中直观显示：
+
+\begin{shell}
++-------------------+
+| Derived Class     |
+|-------------------|
+| Base Class Part   | <- Base class subobject
+|-------------------|
+| Derived Class Data| <- Additional data members of the derived class
++-------------------+
+\end{shell}
+
+在此布局中，派生类对象的基类部分包含属于基类的所有数据成员，在内存中，派生类的其他数据成员紧随其后。请注意，内存中数据成员的实际顺序可能受到对齐要求和编译器优化等因素的影响。
+
+\mySubsubsection{7.2.3}{继承的利与弊}
+
+继承有以下优点：
+
+\begin{itemize}
+\item
+代码重用：继承允许开发人员基于现有类创建新类，从而轻松重用代码并减少冗余。让我们使用媒体播放器系统中的一个例子来演示不同环境中的继承和代码重用。我们将为播放器可能处理的各种类型的媒体内容(例如音频文件、视频文件和播客)设计一个类层次结构。
+
+MediaContent 类将作为所有类型的媒体内容的基类。它将封装常见的属性和行为，例如标题、时长和基本播放控件(播放、暂停、停止)：
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+
+// Base class for all media content
+class MediaContent {
+protected:
+    std::string _title;
+    int _duration; // Duration in seconds
+
+public:
+    MediaContent(const std::string& title, int duration)
+        : _title(title), _duration(duration) {}
+
+    auto title() const { return _title; }
+    auto duration() const { return duration; }
+
+    virtual void play() = 0; // Start playing the content
+    virtual void pause() = 0;
+    virtual void stop() = 0;
+
+    virtual ~MediaContent() = default;
+};
+\end{cpp}
+
+Audio 类扩展了 MediaContent，添加了与音频文件相关的特定属性，例如比特率：
+
+\begin{cpp}
+class Audio : public MediaContent {
+private:
+    int _bitrate; // Bitrate in kbps
+
+public:
+    Audio(const std::string& title, int duration, int bitrate)
+        : MediaContent(title, duration), _bitrate(bitrate) {}
+
+    auto bitrate() const { return _bitrate; }
+
+    void play() override {
+        std::cout << "Playing audio: " << title << ", Duration: " << duration << "s, Bitrate: " << bitrate << "kbps" << std::endl;
+    }
+
+    void pause() override {
+        std::cout << "Audio paused: " << title << std::endl;
+    }
+
+    void stop() override {
+        std::cout << "Audio stopped: " << title << std::endl;
+    }
+};
+\end{cpp}
+
+类似地， Video 类扩展了 MediaContent 并引入了分辨率等附加属性：
+
+\begin{cpp}
+class Video : public MediaContent {
+private:
+    std::string _resolution; // Resolution as width x height
+
+public:
+    Video(const std::string& title, int duration, const
+    std::string& resolution)
+        : MediaContent(title, duration), _resolution(resolution)
+    {}
+
+    auto resolution() const { return _resolution; }
+
+    void play() override {
+        std::cout << "Playing video: " << title << ", Duration: " << duration << "s, Resolution: " << resolution << std::endl;
+    }
+
+    void pause() override {
+        std::cout << "Video paused: " << title << std::endl;
+    }
+
+    void stop() override {
+        std::cout << "Video stopped: " << title << std::endl;
+    }
+};
+\end{cpp}
+
+以下是如何在简单的媒体播放器系统中使用这些类：
+
+\begin{cpp}
+int main() {
+    Audio my_song("Song Example", 300, 320);
+    Video my_movie("Movie Example", 7200, "1920x1080");
+
+    my_song.play();
+    my_song.pause();
+    my_song.stop();
+
+    my_movie.play();
+    my_movie.pause();
+    my_movie.stop();
+
+    return 0;
+}
+\end{cpp}
+
+在此示例中， Audio 和 Video 均从 MediaContent 继承。这使我们能够重用标题和持续时间属性，并需要实现针对每种媒体类型量身定制的播放控件(播放、暂停、停止) 。此层次结构演示了继承如何促进代码重用和系统可扩展性，同时在统一框架中为不同类型的媒体内容启用特定行为。每个类仅添加其类型独有的内容，遵循基类提供通用功能而派生类扩展或修改该功能的原则。
+
+\item
+多态性：通过继承， C++ 支持多态性，允许使用基类引用来引用派生类的对象。这实现了动态方法绑定和对多种派生类型的灵活接口。我们的媒体内容层次结构可用于实现可以统一处理不同类型媒体内容的媒体播放器：
+
+\begin{cpp}
+class MediaPlayer {
+private:
+    std::vector<std::unique_ptr<MediaContent>> _playlist;
+
+public:
+    void add_media(std::unique_ptr<MediaContent> media) {
+        _playlist.push_back(std::move(media));
+    }
+
+    void play_all() {
+        for (auto& media : _playlist) {
+            media->play();
+            // Additional controls can be implemented
+        }
+    }
+};
+
+int main() {
+    MediaPlayer player;
+    player.add(std::make_unique<Audio>("Jazz in Paris", 192, 320));
+    player.add(std::make_unique<Video>("Tour of Paris", 1200, "1280x720"));
+
+    player.play_all();
+
+    return 0;
+}
+\end{cpp}
+
+add 方法接受从 MediaContent 派生的任何类型的媒体内容，通过使用基类指针引用派生类对象来展示多态性。这通过将媒体项目存储在 std::unique\_ptr<MediaContent> 的 std::vector 中来实现。 play\_all 方法遍历存储的媒体并在每个项目上调用 play 方法。尽管实际媒体类型不同(音频或视频)，媒体播放器仍将它们全部视为 MediaContent。在运行时调用正确的 play 方法(来自 Audio 或 Video)，这是动态多态性(也称为动态调度)的一个示例。
+
+\item
+层次结构：它提供了一种自然的方法，以层次化的方式组织相关类，以模拟现实世界的关系。
+\end{itemize}
+
+这是继承的缺点：
+
+\begin{itemize}
+\item
+紧密耦合：继承在基类和派生类之间建立了紧密耦合。对基类的更改可能会无意中影响派生类，从而导致脆弱的代码，当修改基类时，这些代码可能会被破坏。以下示例说明了软件系统中通过继承实现的紧密耦合问题。我们将使用一个场景，该场景涉及一家使用类层次结构管理不同类型的折扣的在线商店。
+\end{itemize}
+
+\mySubsubsection{7.2.4}{基类-Discount}
+
+Discount 类为所有类型的折扣提供基本结构和功能。它根据百分比折扣计算折扣；
+
+\begin{cpp}
+#include <iostream>
+
+class Discount {
+protected:
+    double _discount_percent; // Percent of discount
+
+public:
+    Discount(double percent) : _discount_percent(percent) {}
+
+    virtual double apply_discount(double amount) {
+        return amount * (1 - _discount_percent / 100);
+    }
+};
+\end{cpp}
+
+\mySubsubsection{7.2.5}{派生类-SeasonalDiscount}
+
+SeasonalDiscount 类扩展了 Discount，并根据季节性因素修改折扣计算，例如在节假日期间增加折扣：
+
+\begin{cpp}
+class SeasonalDiscount : public Discount {
+public:
+    SeasonalDiscount(double percent) : Discount(percent) {}
+
+    double apply_discount(double amount) override {
+        // Let's assume the discount increases by an additional 5% during holidays
+        double additional = 0.05; // 5% extra during holidays
+        return amount * (1 - (_discount_percent / 100 + additional));
+    }
+};
+\end{cpp}
+
+\mySubsubsection{7.2.6}{派生类 – ClearanceDiscount}
+
+ClearanceDiscount 类还扩展了 Discount，专为清仓商品而设计，折扣可能高得多：
+
+\begin{cpp}
+class ClearanceDiscount : public Discount {
+public:
+    ClearanceDiscount(double percent) : Discount(percent) {}
+
+    double apply_discount(double amount) override {
+        // Clearance items get an extra 10% off beyond the configured discount
+        double additional = 0.10; // 10% extra for clearance items
+        return amount * (1 - (_discount_percent / 100 + additional));
+    }
+};
+\end{cpp}
+
+演示和紧密耦合问题：
+
+\begin{cpp}
+int main() {
+    Discount regular(20); // 20% regular discount
+    SeasonalDiscount holiday(20); // 20% holiday discount, plus extra
+    ClearanceDiscount clearance(20); // 20% clearance discount, plus extra
+
+    std::cout << "Regular Price $100 after discount: $" << regular.apply_discount(100) << std::endl;
+    std::cout << "Holiday Price $100 after discount: $" << holiday.apply_discount(100) << std::endl;
+    std::cout << "Clearance Price $100 after discount: $" << clearance.apply_discount(100) << std::endl;
+
+    return 0;
+}
+\end{cpp}
+
+\mySubsubsection{7.2.7}{紧密耦合问题}
+
+下面列出了一些紧耦合问题：
+
+\begin{itemize}
+\item
+依赖基类方法：所有子类都与基类的方法结构 (apply\_discount) 紧密耦合。基类方法签名或 apply\_discount 中的逻辑的任何变化都可能导致所有派生类也发生改变。
+
+\item
+内部逻辑假设：子类假设它们可以简单地增加折扣百分比。如果基类中的公式发生变化(例如，合并最小或最大上限)，则所有子类可能需要进行大量修改才能符合新逻辑。
+
+\item
+缺乏灵活性：这种耦合使得很难在不影响其他折扣类型的前提下修改一种折扣类型的行为。这种设计缺乏灵活性，因为可能需要独立发展折扣计算策略。
+\end{itemize}
+
+\mySubsubsection{7.2.8}{解决方案-与策略模式解耦}
+
+减少这种耦合的一种方法是使用策略模式，该模式涉及定义一系列算法(折扣策略)，封装每个算法，并使它们可互换。这允许折扣算法独立于使用它们的客户端而变化：
+
+\begin{cpp}
+class DiscountStrategy {
+public:
+    virtual double calculate(double amount) = 0;
+    virtual ~DiscountStrategy() {}
+};
+
+class RegularDiscountStrategy : public DiscountStrategy {
+public:
+    double calculate(double amount) override {
+        return amount * 0.80; // 20% discount
+    }
+};
+
+class HolidayDiscountStrategy : public DiscountStrategy {
+public:
+    double calculate(double amount) override {
+        return amount * 0.75; // 25% discount
+    }
+};
+
+class ClearanceDiscountStrategy : public DiscountStrategy {
+public:
+    double calculate(double amount) override {
+        return amount * 0.70; // 30% discount
+    }
+};
+
+// Use these strategies in a Discount context class
+class Discount {
+private:
+    std::unique_ptr<DiscountStrategy> _strategy;
+public:
+    Discount(std::unique_ptr<DiscountStrategy> strat) : _strategy(std::move(strat)) {}
+    double apply_discount(double amount) {
+        return _strategy->calculate(amount);
+    }
+};
+\end{cpp}
+
+这种方法将折扣计算与使用它的客户端(折扣)分离，从而允许每个折扣策略独立发展而不会影响其他策略。减少耦合的其他几种方法是：
+
+\begin{itemize}
+\item
+复杂性：深层且复杂的继承层次结构以及多重继承的使用带来了一系列挑战，这些挑战可能会使软件设计复杂化，使系统更难理解、维护和发展。当类从多个级别的基类派生时，形成扩展的依赖链，理解和修改此类类需要了解整个继承链。这种深度增加了复杂性，因为顶级类的更改可能会不可预测地影响所有子类的功能，从而导致软件设计中通常所说的"脆弱性"。
+
+多重继承(即一个类从多个基类继承特性)会带来一系列问题。这种方法可能会导致臭名昭著的"钻石问题"，即如果两个父类都来自一个共同的祖先，并且各自提供相同方法的实现，就会出现歧义。虽然 C++ 等语言提供了虚拟继承等机制来解决此类问题，但这些解决方案增加了复杂性，并可能导致内存管理和方法解析效率低下。
+
+多重继承与多级继承层次结构相结合(有时会出现在更复杂或"奇特"的系统设计中)加剧了这些困难。例如，继承自 ElectricCar 和 FlyingCar 的类(如 HybridFlyingElec tricCar)，而这些类中的每一个又从各自的层次结构中继承，这会导致类结构高度复杂。这种复杂性使得系统难以调试、扩展或可靠使用，同时也增加了测试和维护各种场景中一致行为的挑战。
+
+为了管理大量使用继承所带来的复杂性，可以推荐几种策略。与继承相比，组合往往能提供更大的灵活性，允许系统由定义明确、松散耦合的组件组成，而不是依赖于严格的继承结构。保持继承链简短且易于管理(通常不超过两三层)有助于保持系统的清晰度和可维护性。使用接口(特别是在 Java 和 C\# 等语言中)提供了一种实现多态行为的方法，而无需与继承相关的开销。当多重继承不可避免时，确保文档清晰并考虑使用类似接口的结构或混合至关重要，这有助于最大限度地降低复杂性并增强系统稳健性。
+
+\item
+里氏替换原则 (LSP)：我们在本书前面提到过这个原则； LSP 指出，超类的对象应该可以用其子类的对象替换，而不会改变程序的理想属性(正确性、执行的任务等)。继承有时会导致违反此原则，尤其是当子类与基类预期的行为不同时。以下部分包括与违反LSP 相关的典型问题，并通过简单示例进行说明。
+\end{itemize}
+
+\mySamllsectionNoContent{派生类中的意外行为}
+
+当派生类以显著改变预期行为的方式重写基类的方法时，如果这些对象互换使用，可能会导致意外的结果：
+
+\begin{cpp}
+class Bird {
+public:
+    virtual void fly() {
+        std::cout << "This bird flies" << std::endl;
+    }
+};
+
+class Ostrich : public Bird {
+public:
+    void fly() override {
+        throw std::logic_error("Ostriches can't fly!");
+    }
+};
+
+void make_bird_fly(Bird& b) {
+    b.fly(); // Expecting all birds to fly
+}
+\end{cpp}
+
+在这里，在 make\_bird\_fly 函数中用 Ostrich 对象替换 Bird 对象会导致运行时错误，因为鸵鸟不会飞，违反了 LSP。 Bird 类的用户希望任何子类都能飞，而 Ostrich 却违背了这一期望。
+
+\mySamllsectionNoContent{方法前提条件的问题}
+
+如果派生类对方法施加的先决条件比基类更严格，则会限制子类的可用性并违反 LSP：
+
+\begin{cpp}
+class Payment {
+public:
+    virtual void pay(int amount) {
+        if (amount <= 0) {
+            throw std::invalid_argument("Amount must be positive");
+        }
+        std::cout << "Paying " << amount << std::endl;
+    }
+};
+
+class CreditPayment : public Payment {
+public:
+    void pay(int amount) override {
+        if (amount < 100) { // Stricter precondition than the base
+            class
+            throw std::invalid_argument("Minimum amount for credit payment is 100");
+        }
+        std::cout << "Paying " << amount << " with credit" <<
+        std::endl;
+    }
+};
+\end{cpp}
+
+在这里， CreditPayment 类不能代替 Payment，因为对于低于 100 的金额可能会引发错误，即使这些金额对于基类来说是完全有效的。
+
+\mySamllsectionNoContent{LSP 违规的解决方案}
+
+\begin{itemize}
+\item
+设计时要考虑 LSP：设计类层次结构时，确保任何子类都可以代替父类，而不会改变程序的理想属性
+
+\item
+使用组合而不是继承：如果子类完全遵守基类的契约没有意义，那么使用组合而不是继承
+
+\item
+明确定义行为契约：记录并执行基类的预期行为，并确保所有派生类都严格遵守这些契约，而不会引入更严格的先决条件或改变后置条件
+\end{itemize}
+
+通过密切关注这些原则和潜在的陷阱，开发人员可以创建更为健壮和可维护的面向对象设计。
+
+虽然继承仍然是 C++ 中一个有价值的功能，但了解何时以及如何有效地使用它至关重要。继承类似于二进制级别的组合，这一实现细节强调了它从根本上讲是关于在对象的内存布局中构造和访问数据。从业者必须仔细考虑继承或组合(或两者的结合)是否最能满足他们的设计目标，特别是在系统灵活性、可维护性和 LSP 等 OOP 原则的稳健应用方面。与软件开发中的许多功能一样，关键在于使用正确的工具来完成正确的工作。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

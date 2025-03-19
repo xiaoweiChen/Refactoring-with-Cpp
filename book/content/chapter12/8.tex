@@ -1,0 +1,52 @@
+对于需要对多个测试用例进行通用设置和拆卸的测试， Google Test 提供了测试装置的概念。这是通过定义从 ::testing::Test 派生的类，然后使用 TEST\_F 宏编写使用此装置的测试来实现的：
+
+\begin{cpp}
+class CalculatorTest : public ::testing::Test {
+    protected:
+    void SetUp() override {
+        // Code here will be called immediately before each test
+        calculator.reset(new Calculator());
+    }
+
+    void TearDown() override {
+        // Code here will be called immediately after each test
+        calculator.reset();
+    }
+
+    std::unique_ptr<Calculator> calculator;
+};
+
+TEST_F(CalculatorTest, CanAddPositiveNumbers) {
+    EXPECT_EQ(5, calculator->add(2, 3));
+}
+
+TEST_F(CalculatorTest, CanAddNegativeNumbers) {
+    EXPECT_EQ(-5, calculator->add(-2, -3));
+}
+\end{cpp}
+
+在此示例中， SetUp 和 TearDown 被重写，以便为每个测试用例提供通用的设置（初始化计算器对象）和拆卸（清理计算器对象）。 TEST\_F 用于定义自动使用此设置和拆卸的测试函数，确保每个测试都从新的计算器实例开始。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

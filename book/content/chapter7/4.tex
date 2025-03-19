@@ -1,0 +1,23 @@
+当模板与特定类型一起使用时，编译器会创建具有指定类型的模板的新实例。此过程称为模板实例化，可以隐式或显式发生：
+
+\begin{itemize}
+\item
+隐式实例化：当编译器遇到使用特定类型的模板时，就会发生这种情况：
+
+\begin{cpp}
+int main() {
+    std::cout << add(5, 3) << std::endl; // The compiler infers the type as int
+    return 0;
+}
+\end{cpp}
+
+\item
+显式实例化：程序员明确指定类型：
+
+\begin{cpp}
+int main() {
+    std::cout << add<int>(5, 3) << std::endl; // Explicitly specifies the type as int
+    return 0;
+}
+\end{cpp}
+\end{itemize}

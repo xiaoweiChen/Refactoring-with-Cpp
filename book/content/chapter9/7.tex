@@ -1,0 +1,36 @@
+Clang-Format 得到了众多文本编辑器和 IDE 的广泛支持，无论您的开发环境如何，它都能简化代码格式化过程。将 Clang-Format 直接集成到 IDE 或文本编辑器中的一大优势是能够轻松地从开发环境中调用它。更棒的是，许多编辑器支持在保存文件时自动触发 Clang-Format。此功能可以极大地提高生产力和代码质量，因为它可以确保每个保存的源文件版本都符合项目的编码标准，而无需人工干预。
+
+在 Visual Studio Code 中，有一些插件提供与 Clang-Format 的集成：
+
+\begin{itemize}
+\item
+C/C+，由微软提供： \url{https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools}
+
+\item
+Clang-Format，作者： Xaver Hellauer： \url{https://marketplace.visualstudio.com/items?itemName=xaver.clang-format}
+
+\item
+ClangD，由 LLVM（Clang、 Clang-Format 和其他工具的创建者）开发： \url{https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd}
+\end{itemize}
+
+Vim 和 NeoVim 用户可以利用 vim-clang-format 等插件来集成 Clang-Format，甚至可以将其映射到特定的键盘快捷键以进行快速格式化。此外，它通常可以通过 LSP 提供程序插件或功能启用。
+
+对于使用完整版 Visual Studio 的开发人员， Clang-Format 集成是内置的；您可以轻松指定 .clang-format 配置文件， IDE 将在您格式化代码时使用它。
+
+同样， JetBrains 的 CLion 开箱即用地支持 Clang-Format，允许用户将 .clang 格式的配置文件直接导入项目设置。这种广泛的编辑器支持使在不同的开发团队之间保持一致的代码格式变得轻而易举，因为每个团队成员都可以使用他们喜欢的工具，而不会影响代码质量。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

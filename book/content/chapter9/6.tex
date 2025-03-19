@@ -1,0 +1,70 @@
+在设置 CI 管道时，通常只需检查代码是否符合既定的格式规则，而不是自动修改源文件，这样会很有帮助。这样可以确保标记任何不符合样式指南的代码，从而提示开发人员手动修复。 Clang-Format 使用 \verb|--dry-run| 和 \verb|--Werror| 选项支持此用例，如果任何文件被重新格式化，这两个选项组合使用时会导致工具以非零状态代码退出。
+
+您可以扩展现有的 CMake 设置，使其包含一个仅检查代码格式的新自定义目标。操作方法如下：
+
+\begin{cmake}
+# Create custom target to check clang-format
+if(CLANG_FORMAT_EXECUTABLE)
+    add_custom_target(
+        check-clang-format
+        COMMAND ${CLANG_FORMAT_EXECUTABLE} -style=file -Werror --dryrun ${ALL_SOURCE_FILES}
+        COMMENT "Checking code format with clang-format"
+    )
+else()
+    message("clang-format not found! Target 'check-clang-format' will not be available.")
+endif()
+\end{cmake}
+
+在此扩展设置中，添加了一个名为 check-clang-format 的新自定义目标。 \verb|--dry-run| 选项可确保不会修改任何文件，而 \verb|-Werror| 则会导致 Clang-Format 在发现任何格式差异时退出并显示错误代码。此目标可以使用 \verb|make check-clang-format| 或 \verb|cmake --build . --target check-clang-format| 运行。
+
+现在，您可以在 CI 管道脚本中调用此自定义目标来强制执行代码样式检查。如果代码的格式不符合指定的准则，则构建将失败，并提醒团队存在需要解决的格式问题。
+
+例如，在我们的 .clang-format 文件中，我们将缩进宽度设置为四个空格，但是 main.cpp 文件只使用了两个：
+
+\begin{cpp}
+int main() {
+    return 0;
+}
+\end{cpp}
+
+一旦我们运行检查器，它就会显示有问题的代码而不会进行任何更改：
+
+\begin{shell}
+make check-clang-format
+
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/user/clang-format-tidy/build
+[100%] Checking code format with clang-format
+/home/user/clang-format-tidy/main.cpp:2:13: error: code should be clangformatted [-Wclang-format-violations]
+int main() {
+            ^
+make[3]: *** [CMakeFiles/check-clang-format.dir/build.make:71: CMakeFiles/check-clang-format] Error 1
+make[2]: *** [CMakeFiles/Makefile2:137: CMakeFiles/check-clang-format.dir/all] Error 2
+make[1]: *** [CMakeFiles/Makefile2:144: CMakeFiles/check-clang-format.dir/rule] Error 2
+make: *** [Makefile:150: check-clang-format] Error 2
+\end{shell}
+
+通过将此自定义目标添加到 CMake 设置中，您可以为项目添加额外的质量保证层。它确保任何违反既定格式准则的代码都不会被忽视地进入代码库。这在协作环境中尤其有用，因为多个开发人员可能会为同一个项目做出贡献。您可以随意将此高级示例及其原理包含在您的技术内容中。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

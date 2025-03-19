@@ -1,0 +1,67 @@
+我们可以调整现有的 CMake 设置，使其包含 Clang-Tidy 检查，类似于我们对 Clang-Format 所做的操作。以下是示例 CMake 脚本，用于设置自定义目标以在 C++ 项目上运行 Clang-Tidy：
+
+\begin{cmake}
+# Generate compilation database in the build directory
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Find clang-tidy
+find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy)
+
+# Gather all source files from the root directory recursively
+file(GLOB_RECURSE ALL_SOURCE_FILES
+    *.cpp
+    *.cc
+    *.c++
+    *.c
+    *.C
+    *.h
+    *.hpp
+    *.hxx
+)
+
+# Exclude files in the build directory
+list(FILTER ALL_SOURCE_FILES EXCLUDE REGEX "^${CMAKE_BINARY_DIR}.*")
+
+# Create custom target to run clang-tidy
+if(CLANG_TIDY_EXECUTABLE)
+    add_custom_target(
+        clang-tidy
+        COMMAND ${CLANG_TIDY_EXECUTABLE} -p=${CMAKE_BINARY_DIR}
+        ${ALL_SOURCE_FILES}
+        COMMENT "Running clang-tidy"
+    )
+else()
+    message("clang-tidy not found! Target 'clang-tidy' will not be available.")
+endif()
+
+# Create custom target to check clang-tidy
+if(CLANG_TIDY_EXECUTABLE)
+    add_custom_target(
+        check-clang-tidy
+        COMMAND ${CLANG_TIDY_EXECUTABLE} -p=${CMAKE_BINARY_DIR} --warnings-as-errors=* ${ALL_SOURCE_FILES}
+        COMMENT "Checking code quality with clang-tidy"
+    )
+else()
+    message("clang-tidy not found! Target 'check-clang-tidy' will not be available.")
+endif()
+\end{cmake}
+
+在此脚本中，我们使用 find\_program 找到 clang-tidy 可执行文件。与 Clang-Format 设置类似，我们随后以递归方式从根目录收集所有源文件，确保排除构建目录中的文件。
+
+这里添加了两个自定义目标：
+
+\begin{itemize}
+\item
+clang-tidy：此目标在所有收集的源文件上运行 Clang-Tidy。 \verb|-p=${CMAKE_BINARY_DIR}| 标志指定包含 compile\_command.json 文件的构建目录， Clang-Tidy 将使用该文件进行检查。此 JSON 文件由 CMake 生成，包含有关项目中每个源文件如何编译的信息。它包括编译器选项、包含目录、定义等详细信息。 Clang-Tidy 使用此信息来了解每个源文件的构建上下文，从而使其能够执行更准确、更有意义的检查。
+
+\item
+check-clang-tidy：此目标执行相同的操作，但带有 \verb|--warnings-as-errors=*| 标志。这会将所有警告视为错误，这对于 CI/CD 管道确保代码质量特别有用。
+\end{itemize}
+
+与您之前的设置一样，可以通过 \verb|make clang-tidy| 或 \verb|make check-clang-tidy| 或它们的等效 \verb|cmake --build . --target clang-tidy| 和 \verb|cmake --build . --target check-clang-tidy| 来运行这些自定义目标。
+
+通过将 Clang-Tidy 集成到 CMake 构建过程中，您将提供另一层自动代码质量检查，就像您对 Clang-Format 所做的那样。您可以随意将其包含在您的章节中，以全面了解自动代码质量保证。
+
+
+
+

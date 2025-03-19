@@ -1,0 +1,180 @@
+模板和泛型编程是 C++ 的关键特性，可以创建灵活且可重用的组件。虽然本章概述了这些强大的工具，但需要注意的是，模板(尤其是模板元编程)的主题非常广泛，足以写满整本书。对于那些寻求深入探索的人，建议阅读有关 C++ 模板和元编程的专用资源。
+
+\mySubsubsection{7.3.1}{模板有何用途？}
+
+在需要对不同类型的数据执行类似操作的情况下，模板特别有用。它们允许您编写适用于任何类型的单段代码。以下小节概述了一些常见用例和示例。
+
+\mySubsubsection{7.3.2}{通用算法}
+
+算法可以对不同类型进行操作，而无需为每种类型重写代码。例如，标准库的 std::sort 函数可以对任何类型的元素进行排序，只要这些元素可以进行比较：
+
+\begin{cpp}
+#include <algorithm>
+#include <vector>
+#include <iostream>
+
+template <typename T>
+void print(const std::vector<T>& vec) {
+    for (const T& elem : vec) {
+        std::cout << elem << " ";
+    }
+    std::cout << std::endl;
+}
+
+int main() {
+    std::vector<int> int_vec = {3, 1, 4, 1, 5};
+    std::sort(int_vec.begin(), int_vec.end());
+    print(int_vec); // Outputs: 1 1 3 4 5
+
+    std::vector<std::string> string_vec = {"banana", "apple", "cherry"};
+    std::sort(string_vec.begin(), string_vec.end());
+    print(string_vec); // Outputs: apple banana cherry
+
+    return 0;
+}
+\end{cpp}
+
+\mySubsubsection{7.3.3}{容器类}
+
+模板在标准库中被广泛用于诸如 std::vector、 std::list 和 std::map 等容器，它们可以存储任何类型的元素：
+
+\begin{cpp}
+#include <vector>
+#include <iostream>
+
+int main() {
+    std::vector<int> int_vec = {1, 2, 3};
+    std::vector<std::string> string_vec = {"hello", "world"};
+
+    for (int val : int_vec) {
+        std::cout << val << " ";
+    }
+    std::cout << std::endl;
+
+    for (const std::string& str : string_vec) {
+        std::cout << str << " ";
+    }
+    std::cout << std::endl;
+
+    return 0;
+}
+\end{cpp}
+
+如果不使用模板，开发人员使用集合的选项将仅限于为每种类型的集合创建单独的类(例如， IntVector、 StringVector 等)，或者要求使用公共基类，这将需要类型转换并失去类型安全性，例如：
+
+\begin{cpp}
+class BaseObject {};
+
+class Vector {
+    public:
+        void push_back(BaseObject* obj);
+};
+\end{cpp}
+
+另一种选择是存储一些空指针，并在检索它们时将它们转换为所需的类型，但这种方法更容易出错。
+
+标准库使用智能指针模板，例如 std::unique\_ptr 和 std::shared\_ptr，它们管理动态分配对象的生命周期：
+
+\begin{cpp}
+#include <memory>
+#include <iostream>
+
+int main() {
+    std::unique_ptr<int> ptr = std::make_unique<int>(42);
+    std::cout << "Value: " << *ptr << std::endl; // Outputs: Value: 42
+
+    std::shared_ptr<int> shared_ptr = std::make_shared<int>(100);
+    std::cout << "Shared Value: " << *shared_ptr << std::endl; // Outputs: Shared Value: 100
+
+    return 0;
+}
+\end{cpp}
+
+模板通过允许编译器在模板实例化期间检查类型来确保类型安全，从而减少运行时错误：
+
+\begin{cpp}
+template <typename T>
+T add(T a, T b) {
+    return a + b;
+}
+
+int main() {
+    std::cout << add<int>(5, 3) << std::endl; // Outputs: 8
+    std::cout << add<double>(2.5, 3.5) << std::endl; // Outputs: 6.0
+    return 0;
+}
+\end{cpp}
+
+\mySubsubsection{7.3.4}{模板的工作原理}
+
+C++ 中的模板不是实际的代码，而是代码生成的蓝图。当使用特定类型实例化模板时，编译器会生成该模板的具体实例，并使用指定类型替换模板参数。
+
+\mySamllsectionNoContent{函数模板}
+
+\begin{cpp}
+template <typename T>
+T add(T a, T b) {
+    return a + b;
+}
+
+int main() {
+    std::cout << add<int>(5, 3) << std::endl; // Outputs: 8
+    std::cout << add<double>(2.5, 3.5) << std::endl; // Outputs: 6.0
+    return 0;
+}
+\end{cpp}
+
+模板实例化后实际生成的函数将是这样的(取决于编译器)：
+
+\begin{cpp}
+int addInt(int a, int b) {
+    return a + b;
+}
+
+double addDouble(double a, double b) {
+    return a + b;
+}
+\end{cpp}
+
+\mySamllsectionNoContent{类模板}
+
+类模板为可以对不同数据类型进行操作的类定义了一种模式：
+
+\begin{cpp}
+template <typename T>
+class Box {
+private:
+    T content;
+public:
+    void set_content(const T& value) {
+        content = value;
+    }
+
+    T get_content() const {
+        return content;
+    }
+};
+
+int main() {
+    Box<int> intBox;
+    intBox.set_content(123);
+    std::cout << intBox.get_content() << std::endl; // Outputs: 123
+
+    Box<std::string> stringBox;
+    stringBox.set_content("Hello Templates!");
+    std::cout << stringBox.get_content() << std::endl; // Outputs: Hello Templates!
+
+    return 0;
+}
+\end{cpp}
+
+模板实例化后实际生成的类将是这样的(取决于编译器)：
+
+\begin{cpp}
+class BoxInt { /*Box<int>*/ };
+class BoxString { /*Box<int>*/ }
+\end{cpp}
+
+
+
+

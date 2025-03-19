@@ -1,0 +1,134 @@
+
+
+\mySubsubsection{6.5.1}{使用类型检查编写健壮的代码}
+
+类型检查是程序稳健性和安全性的支柱之一。虽然 C++ 是强类型的，但它确实允许一定的灵活性(或宽容性，取决于您的观点)，如果不仔细管理，可能会导致错误。以下是通过利用类型检查编写稳健的 C++ 代码的一些技术和最佳实践。
+
+\mySamllsectionNoContent{使用类型特征进行编译时检查}
+
+C++ 标准库在 <type\_traits> 标头中提供了一组类型特征，可让您在编译时检查并根据类型做出决策。例如，如果您有一个只应接受无符号整数类型的泛型函数，则可以使用 static\_assert 强制执行此操作：
+
+\begin{cpp}
+#include <type_traits>
+
+template <typename T>
+void foo(T value) {
+    static_assert(std::is_unsigned<T>::value, "foo() requires an unsigned integral type");
+    // ... function body
+}
+\end{cpp}
+
+\mySamllsectionNoContent{利用 constexpr if}
+
+C++17 引入了 constexpr if，使您可以编写在编译时进行评估的条件代码。这对于模板代码中特定于类型的操作非常有用：
+
+\begin{cpp}
+template <typename T>
+void bar(T value) {
+    if constexpr (std::is_floating_point<T>::value) {
+        // Handle floating-point types
+    } else if constexpr (std::is_integral<T>::value) {
+        // Handle integral types
+    }
+}
+\end{cpp}
+
+\mySamllsectionNoContent{函数参数的强类型}
+
+C++ 允许类型别名，这有时会使理解函数参数的用途变得困难。例如，声明为 void process( int, int); 的函数信息量不大。第一个整数是长度吗？第二个整数是索引吗？缓解这种情况的一种方法是使用强类型定义，例如：
+
+\begin{cpp}
+struct Length { int value; };
+struct Index { int value; };
+
+void process(Length l, Index i);
+\end{cpp}
+
+现在，函数签名提供了语义含义，使得开发人员不太可能意外交换参数。
+
+\mySubsubsection{6.5.2}{隐式转换和类型强制}
+
+\mySamllsectionNoContent{意外创建文件的情况}
+
+在 C++ 开发中，为了实现灵活性，定义带有构造函数的类是很常见的，这些构造函数可以接受各种参数类型。然而，这会带来无意隐式转换的风险。为了说明这一点，请考虑以下涉及 File 类和 clean 函数的代码片段：
+
+\begin{cpp}
+#include <iostream>
+class File {
+public:
+    File(const std::string& path) : path_{path} {
+        auto file = fopen(path_.c_str(), "w");
+        // check if file is valid
+        // handle errors, etc
+        std::cout << "File ctor\n";
+    }
+
+    auto& path() const {
+        return path_;
+    }
+
+    // other ctors, dtor, etc
+
+private:
+    FILE* file_ = nullptr;
+    std::string path_;
+};
+
+void clean(const File& file) {
+    std::cout << "Removing the file: " << file.path() << std::endl;
+}
+
+int main() {
+    auto random_string = std::string{"blabla"};
+    clean(random_string);
+}
+\end{cpp}
+
+输出清楚地说明了这个问题：
+
+\begin{shell}
+File ctor
+Removing the file: blabla
+\end{shell}
+
+由于构造函数中缺少显式关键字，编译器会自动将 std::string 转换为 File 对象，从而引发意外的副作用——创建一个新文件。
+
+\mySamllsectionNoContent{显式的效用}
+
+为了减轻此类风险，可以使用显式关键字。通过将构造函数标记为显式，您可以指示编译器禁止该构造函数进行隐式转换。以下是更正后的 File 类：
+
+\begin{cpp}
+class File {
+    public:
+    explicit File(const std::string& path) : path_{path} {
+        auto file = fopen(path_.c_str(), "w");
+        // check if file is valid
+        // handle errors, etc
+        std::cout << "File ctor\n";
+    }
+    // ... rest of the class
+};
+\end{cpp}
+
+经过此更改后， clean(random\_string); 行将导致编译错误，从而有效地防止意外创建文件。
+
+\mySamllsectionNoContent{一个轻松的警告}
+
+虽然出于教学目的，我们的示例可能有些简化(是的，没有必要自己创建 File 类——我们有这方面的库！)，但它强调了 C++ 中类型安全的一个关键方面。如果没有明确防范隐式转换，看似无害的构造函数可能会导致意外行为。
+
+因此，请记住，定义构造函数时，明确说明您的意图是有益的。您永远不知道何时会意外启动您从未打算举办的"文件派对"。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

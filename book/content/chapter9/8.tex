@@ -1,0 +1,56 @@
+在精心格式化代码以确保空格、星号、对齐和括号位置都正确之后，还剩下最后一个需要统一的方面——命名风格。确保类、变量、函数和其他标识符之间的命名约定的一致性通常是一个艰苦的过程，通常需要经过仔细的同行评审。但是，有一种自动化的方法可以实现这一点，从而减少手动工作量和错误。
+
+Clang-Tidy 可以解决这个问题。虽然我们将在下一章中深入探讨 Clang-Tidy 的各种功能，但值得注意的是，它不仅仅是一个 linter。它提供了大量的检查，不仅包括语法糖，还包括语义分析和可读性。在命名约定方面，其最有用的功能之一是标识符命名检查。通过配置此检查，您可以强制执行项目范围内的规则来命名各种实体。
+
+假设您希望类、结构和枚举名称采用驼峰命名法CamelCase，命名空间、变量、函数和方法采用小写lower\_case，常量采用大写UPPER\_CASE。此外，您希望私有和受保护变量带有尾部下划线，而公共变量则不带。所有这些要求都可以在一个简单的 .clang-tidy 文件中配置， Clang-Tidy 将读取该文件以强制执行您的命名规则：
+
+\begin{shell}
+---
+Checks: 'readability-identifier-naming'
+
+FormatStyle: file
+CheckOptions:
+    - key: readability-identifier-naming.NamespaceCase
+      value: 'lower_case'
+    - key: readability-identifier-naming.InlineNamespaceCase
+      value: 'lower_case'
+    - key: readability-identifier-naming.EnumCase
+      value: 'CamelCase'
+    - key: readability-identifier-naming.EnumConstantCase
+      value: 'UPPER_CASE'
+    - key: readability-identifier-naming.ClassCase
+      value: 'CamelCase'
+    - key: readability-identifier-naming.StructCase
+      value: 'CamelCase'
+    - key: readability-identifier-naming.ClassMethodCase
+      value: 'lower_case'
+    - key: readability-identifier-naming.FunctionCase
+      value: 'lower_case'
+    - key: readability-identifier-naming.VariableCase
+      value: 'lower_case'
+    - key: readability-identifier-naming.GlobalVariableCase
+      value: 'lower_case'
+    - key: readability-identifier-naming.StaticConstantCase
+      value: 'UPPER_CASE'
+    - key: readability-identifier-naming.PublicMemberCase
+      value: 'lower_case'
+    - key: readability-identifier-naming.ProtectedMemberCase
+      value: 'lower_case'
+    - key: readability-identifier-naming.PrivateMemberCase
+      value: 'lower_case'
+    - key: readability-identifier-naming.PrivateMemberSuffix
+      value: '_'
+    - key: readability-identifier-naming.ClassMemberCase
+      value: 'lower_case'
+\end{shell}
+
+这些规则可以无限扩展，并达到最高分辨率。现有检查的完整文档可在 \url{https://clang.llvm.org/extra/clang-tidy/checks/readability/identifier-naming.html} 上找到。
+
+通过将 Clang-Tidy 整合到构建过程和 CI 管道中，您可以自动执行这些命名约定，从而使代码库更易于阅读、维护和协作。我们将在下一章中深入探讨如何配置和使用 Clang-Tidy 进行各种其他检查。
+
+
+
+
+
+
+

@@ -1,0 +1,52 @@
+
+CMake 因其强大的脚本功能和跨平台支持而被广泛用于 C++ 项目。将 Conan 与 CMake 集成可以显著简化管理依赖项的过程。以下是实现此集成的方法：
+
+\begin{itemize}
+\item
+Conan CMake 包装器： Conan 提供了一个可自动执行集成的 CMake 包装器脚本。要使用它，请将 Conan 生成的 conanbuildinfo.cmake 文件包含在项目的 CMakeLists.txt 中：
+
+\begin{cmake}
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(TARGETS)
+\end{cmake}
+
+该脚本设置了必要的包含路径和库路径，并定义了 Conan 管理的依赖项，使其可用于您的 CMake 项目。
+
+\item
+使用目标： conan\_basic\_setup() 中的 TARGETS 选项为您的 Conan 依赖项生成 CMake 目标，允许您使用 CMake 中的 target\_link\_libraries() 函数链接它们：
+
+\begin{cmake}
+target_link_libraries(my_project_target CONAN_PKG::poco)
+\end{cmake}
+
+这种方法提供了一种干净、明确的方式，将项目目标与 Conan 管理的库链接起来。
+\end{itemize}
+
+\mySubsubsection{13.4.1}{其他构建系统集成}
+
+Conan 的灵活性也扩展到其他构建系统，使其能够适应各种项目需求：
+
+\begin{itemize}
+\item
+Makefile：对于使用 Makefile 的项目， Conan 可以为可包含在 Makefile 中的包含路径、库路径和标志生成适当的变量：
+
+\begin{shell}
+include conanbuildinfo.mak
+\end{shell}
+
+\item
+MSBuild：对于使用 MSBuild（在 Windows 环境中很常见）的项目， Conan 可以生成可导入到 Visual Studio 项目中的 .props 文件，从而实现与 MSBuild 生态系统的无缝集成。
+
+\item
+Bazel、 Meson 及其他：虽然对某些构建系统（例如 Bazel 或 Meson）的直接支持可能需要自定义集成脚本或工具，但 Conan 社区经常贡献生成器和工具来弥补这些差距，从而将 Conan 的覆盖范围扩展到几乎任何构建系统。
+\end{itemize}
+
+\mySubsubsection{13.4.2}{定制集成}
+
+对于没有直接支持的构建系统或具有独特要求的项目， Conan 提供了自定义生成文件甚至编写自定义生成器的功能。这允许开发人员根据其特定的构建过程定制集成，从而使 Conan 成为一种高度适应依赖项管理的工具。
+
+\mySubsubsection{13.4.3}{结论}
+
+Conan 与 CMake 和其他构建系统的集成凸显了其作为 C++ 项目的包管理器的多功能性。通过提供将依赖项合并到各种构建环境中的简单机制， Conan 不仅简化了依赖项管理，还增强了跨不同平台和配置的构建可重复性和一致性。无论您使用的是广泛使用的构建系统（例如 CMake）还是更专业的设置， Conan 灵活的集成选项都能确保您能够保持高效且精简的开发工作流程。
+
+

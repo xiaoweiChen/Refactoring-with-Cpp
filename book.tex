@@ -1,0 +1,18 @@
+
+\special{dvipdfmx:config z 0} %取消PDF压缩，加快速度，最终版本生成的时候最好把这句话注释掉
+
+%实用的工具宏包 syntonly。加载这个宏包后，在导言区使用 \syntaxonly 命令，可令 LATEX 编译后不生成 DVI 或者 PDF 文档，只排查错误，编译速度会快不少：
+%\usepackage{syntonly}
+%\syntaxonly
+
+\include{book/ccs.tex}
+
+\begin{document}
+\begin{sloppypar} %latex中一行文字出现溢出问题的解决方法
+%\maketitle
+
+\subfile{book/index.tex}
+
+\end{sloppypar}
+\end{document}
+

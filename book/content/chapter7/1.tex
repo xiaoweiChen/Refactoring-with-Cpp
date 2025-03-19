@@ -1,0 +1,322 @@
+
+在 OOP 中确定类的良好候选者涉及寻找自然封装数据和行为的实体。
+
+\mySubsubsection{7.1.1}{凝聚}
+
+类应该表示一组紧密相关的功能。这意味着类中的所有方法和数据都与其提供的特定功能直接相关。例如， Timer 类是一个很好的候选者，因为它封装了与计时相关的属性和方法( 开始、停止、重置时间)，保持了高内聚性。
+
+\mySubsubsection{7.1.2}{封装}
+
+具有应避免外界干扰或滥用的属性和行为的实体可以封装在类中。
+
+BankAccount 类封装了余额(属性)和存款、取款、转账等行为，确保余额操作仅通过受控、安全的操作完成。
+
+\mySubsubsection{7.1.3}{可重用性}
+
+类应该被设计成可以在程序的不同部分甚至不同的程序中重复使用。
+
+管理数据库连接的 DatabaseConnection 类可以在需要数据库交互、处理连接、断开连接和错误管理的多个应用程序中重复使用。
+
+\mySubsubsection{7.1.4}{抽象}
+
+类应该通过向用户隐藏复杂逻辑来提供简化的接口，代表更高级别的抽象。例如，标准库中有 std::vector 等类，它们抽象了动态数组的复杂性，为数组操作提供了简单的接口。
+
+\mySubsubsection{7.1.5}{现实世界实体}
+
+类通常表示与正在建模的系统相关的现实世界的对象。
+
+在航班预订系统中，航班、乘客和机票等类别是很好的候选者，因为它们直接表示具有明确属性和行为的现实世界对象。
+
+\mySubsubsection{7.1.6}{管理复杂性}
+
+课程应该将大问题分解为更小、更易于管理的部分，从而有助于管理复杂性。
+
+这里有一个例子——在图形编辑软件中， GraphicObject 类可以作为更具体的图形对象(如圆形、矩形和多边形)的基类，系统地组织图形属性和功能。
+
+\mySubsubsection{7.1.7}{通过封装最小化类的职责}
+
+封装是 OOP 中的一个基本概念，涉及将数据(属性)和对数据进行操作的方法(函数)捆绑到单个单元或类中。它不仅可以从外部隐藏对象的内部状态，还可以模块化其行为，使软件更易于管理和扩展。但是，一个类应该封装多少功能和数据会显著影响应用程序的可维护性和可扩展性。
+
+\mySamllsectionNoContent{类中的过度封装——一个常见的陷阱}
+
+实际上，在一个类中封装过多的功能和数据是一个常见的错误，可能会导致多个问题。这通常会导致出现一个神对象——一个控制应用程序太多不同部分的类，它自己做了太多的工作。这样的类通常很难理解、难以维护，而且测试起来也很困难。
+
+让我们看一个封装不良的 Car 类的例子。
+
+请考虑以下 Car 类的示例，该类不仅试图管理汽车的基本属性，还试图管理其内部系统的细节方面，例如发动机、变速器和娱乐系统：
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+class Car {
+private:
+    std::string _model;
+    double _speed;
+    double _fuel_level;
+    int _gear;
+    bool _entertainment_system_on;
+
+public:
+    Car(const std::string& model) : _model(model), _speed(0), _fuel_level(50), _gear(1), _entertainment_system_on(false) {}
+
+    void accelerate() {
+        if (_fuel_level > 0) {
+            _speed += 10;
+            _fuel_level -= 5;
+            std::cout << "Accelerating. Current speed: " << _speed <<
+            " km/h, Fuel level: " << _fuel_level << " liters" << std::endl;
+        } else {
+            std::cout << "Not enough fuel." << std::endl;
+        }
+    }
+
+    void change_gear(int new_gear) {
+        _gear = new_gear;
+        std::cout << "Gear changed to: " << _gear << std::endl;
+    }
+
+    void toggle_entertainment_system() {
+        _entertainment_system_on = !_entertainment_system_on;
+        std::cout << "Entertainment System is now " << (_entertainment_system_on ? "on" : "off") << std::endl;
+    }
+
+    void refuel(double amount) {
+        _fuel_level += amount;
+        std::cout << "Refueling. Current fuel level: " << _fuel_level << " liters" << std::endl;
+    }
+};
+\end{cpp}
+
+这个 Car 类是有问题的，因为它试图管理汽车功能的太多方面，而这些方面最好由专门的组件来处理。
+
+\mySamllsectionNoContent{使用组合进行适当封装}
+
+更好的方法是使用组合将职责委托给其他类，每个类处理系统功能的特定部分。这不仅符合单一职责原则，而且使系统更加模块化，更易于维护。
+
+下面是一个使用组合精心设计的 Car 类的示例：
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+
+class Engine {
+private:
+    double _fuel_level;
+
+public:
+    Engine() : _fuel_level(50) {}
+    void consume_fuel(double amount) {
+        _fuel_level -= amount;
+        std::cout << "Consuming fuel. Current fuel level: " << _fuel_level << " liters" << std::endl;
+    }
+
+    void refuel(double amount) {
+        _fuel_level += amount;
+        std::cout << "Engine refueled. Current fuel level: " << _fuel_level << " liters" << std::endl;
+    }
+
+    double get_fuel_level() const {
+        return _fuel_level;
+    }
+};
+
+class Transmission {
+private:
+    int _gear;
+
+public:
+    Transmission() : _gear(1) {}
+    void change_gear(int new_gear) {
+        _gear = new_gear;
+        std::cout << "Transmission: Gear changed to " << _gear << std::endl;
+    }
+};
+
+class EntertainmentSystem {
+private:
+    bool _is_on;
+
+public:
+    EntertainmentSystem() : _is_on(false) {}
+    void toggle() {
+        _is_on = !_is_on;
+        std::cout << "Entertainment System is now " << (_is_on ? "on"
+        : "off") << std::endl;
+    }
+};
+class Car {
+private:
+    std::string _model;
+    double _speed;
+    Engine _engine;
+    Transmission _transmission;
+    EntertainmentSystem _entertainment_system;
+
+public:
+    Car(const std::string& model) : _model(model), _speed(0) {}
+    void accelerate() {
+        if (_engine.get_fuel_level() > 0) {
+            _speed += 10;
+            _engine.consume_fuel(5);
+            std::cout << "Car accelerating. Current speed: " << _speed << " km/h" << std::endl;
+        } else {
+            std::cout << "Not enough fuel to accelerate." <<
+            std::endl;
+        }
+    }
+
+    void change_gear(int gear) {
+        _transmission.change_gear(gear);
+    }
+
+    void toggle_entertainment_system() {
+        _entertainment_system.toggle();
+    }
+
+    void refuel(double amount) {
+        _engine.refuel(amount);
+    }
+};
+\end{cpp}
+
+在这个精致的设计中， Car 类充当其组件之间的协调者，而不是直接管理每个细节。每个子系统(发动机、传动和娱乐系统)都处理自己的状态和行为，从而使设计更易于维护、测试和扩展。此示例展示了适当的封装和组合如何显著增强面向对象软件的结构和质量。
+
+\mySubsubsection{7.1.8}{C++ 中结构和类的使用}
+
+在 C++ 中，结构和类都用于定义可包含数据和函数的用户定义类型。它们之间的主要区别在于它们的默认访问级别：默认情况下，类的成员是私有的，而结构的成员是公共的。这种区别微妙地影响了它们在 C++ 编程中的典型用途。
+
+\mySamllsectionNoContent{结构体——被动数据结构的理想选择}
+
+C++ 中的结构特别适合创建被动数据结构，其主要目的是存储数据而不封装太多行为。由于其默认公开的特性，结构通常用于允许直接访问数据成员，这可以简化代码并减少对操作数据的额外函数的需求。
+
+以下列表概述了应使用结构的情况：
+
+\begin{itemize}
+\item
+数据对象：结构体非常适合创建普通旧式数据 (POD) 结构体。这些是主要保存数据且功能(方法)很少或根本没有的简单对象。例如，结构体通常用于表示空间中的坐标、 RGB 颜色值或设置配置，在这些配置中，直接访问数据字段比通过 getter 和 setter 更方便：
+
+\begin{cpp}
+struct Color {
+    int red = 0;
+    int green = 0;
+    int blue = 0;
+};
+
+struct Point {
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+};
+Fortunately, C++ 11 and C++ 20 provide aggregate initialization
+and designated initializers, making it easier to initialize
+structs with default values.
+// C++ 11
+    auto point = Point {1.1, 2.2, 3.3};
+// C++ 20
+    auto point2 = Point {.x = 1.1, .y = 2.2, .z = 3.3}
+\end{cpp}
+
+如果您的项目没有 C++ 20，您可以利用 C99 指定的初始化程序来实现类似的效果：
+
+\begin{cpp}
+    auto point3 = Point {.x = 1.1, .y = 2.2, .z = 3.3};
+\end{cpp}
+
+\item
+互操作性：结构在与 C 语言代码交互时或在数据对齐和布局至关重要的系统中非常有用。它们可确保硬件交互或网络通信等低级操作的兼容性和性能。
+
+\item
+轻量级容器：当您需要一个轻量级容器来将一些变量组合在一起时，结构体比类更透明、更简便。对于封装不是主要考虑因素的小型聚合，结构体是理想之选。
+\end{itemize}
+
+\mySamllsectionNoContent{类——封装复杂性}
+
+类是 C++ OOP 的支柱，用于将数据和行为封装到单个实体中。默认私有访问说明符鼓励隐藏内部状态和实现细节，从而促进遵循封装和抽象原则的更严格的设计。
+
+以下列表解释了何时应该使用类：
+
+\begin{itemize}
+\item
+复杂系统：对于涉及复杂数据操作、状态管理和接口控制的组件，类是首选。它们提供数据保护和接口抽象的机制，这对于维护软件系统的完整性和稳定性至关重要：
+
+\begin{cpp}
+class Car {
+private:
+    int speed;
+    double fuel_level;
+
+public:
+    void accelerate();
+    void brake();
+    void refuel(double amount);
+};
+\end{cpp}
+
+\item
+行为封装：当功能(方法)与数据同样重要时，类是理想的选择。将行为与数据一起封装到类中，可以使代码更易于维护且无错误，因为对数据的操作受到严格控制且定义明确。
+
+\item
+继承和多态性：类支持继承和多态性，从而可以创建可动态扩展和修改的复杂对象层次结构。这在许多软件设计模式和高级系统架构中至关重要。
+\end{itemize}
+
+在 C++ 中，选择结构还是类应以预期用途为指导：结构适用于简单、透明的数据容器，其中直接数据访问是可以接受的或必要的；类适用于更复杂的系统，其中需要封装、行为和接口控制。了解和利用每种方法的优势可以产生更干净、更高效、可扩展的代码。
+
+\mySubsubsection{7.1.9}{类中的常见方法类型——getter 和 setter}
+
+在 OOP 中，尤其是在 Java 等语言中， getter 和 setter 是标准方法，它们是访问和修改类的私有数据成员的主要接口。这些方法提供对对象属性的受控访问，遵循封装原则，这是有效面向对象设计的基石。
+
+\mySamllsectionNoContent{getter 和 setter 的目的和约定}
+
+Getter(也称为访问器)是用于检索私有字段值的方法。它们不会修改数据。 Setter(也称为修改器)是允许根据收到的输入修改私有字段的方法。这些方法通过在设置数据时强制执行约束或条件，使对象的内部状态保持一致和有效。
+
+以下是 getter 和 setter 的约定：
+
+\begin{itemize}
+\item
+命名：通常，属性 x 的 getter 名为 get\_x()， setter 名为 set\_x(value)。这种命名约定在 Java 中几乎是通用的，并且在支持基于类的 OOP 的其他编程语言中也普遍采用。
+
+\item
+返回类型和参数：属性的 getter 返回与属性本身相同的类型并且不接受任何参数，而 set ter 返回 void 并接受与其设置的属性相同类型的参数。
+\end{itemize}
+
+以下是 C++ 中的一个例子：
+
+\begin{cpp}
+class Person {
+private:
+    std::string _name;
+    int _age;
+
+public:
+    // Getter for the name property
+    std::string get_name() const { return _name; }
+
+    // Setter for the name property
+    void set_name(const std::string& name) { _name = name; }
+
+    // Getter for the age property
+    int get_age() const { return _age; }
+
+    // Setter for the age property
+    void set_age(int age) {
+        if (age >= 0) { // validate the age
+            _age = age;
+        }
+    }
+};
+\end{cpp}
+
+\mySamllsectionNoContent{实用性和建议}
+
+受控访问和验证： Getter 和 Setter 封装类的字段，提供受控访问和验证逻辑。这有助于维护数据的完整性，确保不会设置无效或不适当的值。
+
+\textbf{灵活性}：通过使用 getter 和 setter，开发人员可以更改数据存储和检索方式的底层实现，而无需更改类的外部接口。这在保持向后兼容性或需要更改数据表示以进行优化时特别有用。
+
+\textbf{一致性}：这些方法可以强制执行需要在对象整个生命周期内保持一致的规则。例如，确保字段永远不会保留空值或遵循特定格式。
+
+\mySamllsectionNoContent{何时使用 getter 和 setter，何时不使用}
+
+经验法则是在存在封装、业务逻辑或继承复杂性的类中使用 getter 和 setter。例如，对于具有相对复杂逻辑的 Car 和 Engine 类， getter 和 setter 对于维护数据的完整性和确保系统正常运行至关重要。另一方面，对于 Point 或 Color 等简单数据结构，其主要目的是保存数据而没有太多行为，使用具有公共数据成员的结构可能更合适。请注意，如果结构是库或 API 的一部分，则提供 getter 和 setter 可能对将来的扩展有益。
+
+这种细致入微的方法使开发人员能够在控制和简单性之间取得平衡，选择最合适的工具来满足其软件组件的特定要求。
+

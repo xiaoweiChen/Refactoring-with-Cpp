@@ -1,0 +1,85 @@
+为了巩固对这些概念的理解，我们将研究 C++ 中一些真实的 API 设计示例。这些示例将重点介绍常见的挑战和有效的解决方案，展示如何在实际场景中应用良好 API 设计的原则。
+通过这些示例，我们旨在提供清晰、可操作的见解，您可以将其应用于自己的项目，确保您的 API 不仅功能齐全，而且优雅且易于维护。让我们深入了解现实世界 API 设计的复杂性，看看这些原则如何在实践中发挥作用：
+
+\begin{itemize}
+\item
+适用于现代 C++ 的 JSON (nlohmann/json)：此库是极简 API 设计的绝佳示例。它提供了直观、直接的方法来解析、序列化和操作 C++ 中的 JSON 数据，并具有以下优点：
+
+\begin{itemize}
+\item
+简单：界面清晰简洁，易于使用。
+
+\item
+功能分解：每个功能处理与 JSON 处理相关的特定任务。
+
+\item
+最小依赖性：设计用于与 C++ 标准库配合使用，避免不必要的外部依赖性：
+
+\begin{cpp}
+#include <nlohmann/json.hpp>
+nlohmann::json j = {
+    {"pi", 3.141},
+    {"happy", true},
+    {"name", "Niels"},
+    {"nothing", nullptr},
+    {"answer", {
+            {"everything", 42}
+    }},
+    {"list", {1, 0, 2}},
+    {"object", {
+            {"currency", "USD"},
+            {"value", 42.99}
+    }}
+};
+\end{cpp}
+\end{itemize}
+
+\item
+SQLite C++ 接口 (SQLiteCpp)：此库提供了一个极简接口，用于与 C++ 中的 SQLite 数据库进行交互。它具有以下优点：
+
+\begin{itemize}
+\item
+简单：为数据库操作提供简单明了的 API。
+
+\item
+接口隔离：为不同的数据库操作(如查询和事务)提供单独的类。
+
+\item
+最小依赖性：使用 SQLite 和 C++ 标准库构建：
+
+\begin{cpp}
+#include <SQLiteCpp/SQLiteCpp.h>
+
+SQLite::Database db("test.db", SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
+
+db.exec("CREATE TABLE test (id INTEGER PRIMARY KEY, valueTEXT)");
+
+SQLite::Statement query(db, "INSERT INTO test (value) VALUES(?)");
+
+query.bind(1, "Sample value");
+query.exec();
+\end{cpp}
+\end{itemize}
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

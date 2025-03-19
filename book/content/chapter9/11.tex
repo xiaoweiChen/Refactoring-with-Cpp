@@ -1,0 +1,74 @@
+
+Clang-Tidy 的真正强大之处在于它不仅能够识别问题，还能自动纠正问题。手动修复可能非常耗时且容易出错，因此在快节奏的开发环境中，自动化具有极高的价值。幸运的是， Clan g-Tidy 在这方面表现出色。该工具建议的大多数修复都可以自动应用，为您节省大量手动劳动和潜在错误。要应用这些自动修复，只需在终端中运行 make clang-tidy 即可。该工具将扫描代码以查找违规行为，并在可能的情况下自动更正代码，使其符合您配置的准则：
+
+\begin{cpp}
+#include <string>
+#include <vector>
+namespace filesystem { // CamelCase instead of lower _ case
+enum class Permissions : uint8_t { READ, WRITE, EXECUTE };
+struct User {
+    std::string name; // redundant suffix _ for public member
+    int id = 0; // CamelCase instead of lower_case
+    Permissions permissions;
+};
+class File { // lower_case instead of CamelCase
+    public:
+    File(int id, const std::string &file_name,
+        const std::vector<User> access _ list)
+        : id_{id}, file_name_{file_name}, access_list_{access_list} {}
+    int get_id() const // CamelCase instead of lower_case
+    {
+        return id_;
+    }
+
+    auto &get_name() const // camelBack instead of lower_case
+    {
+        return file_name_;
+    }
+
+    const std::vector<User> &access _ list() const { return access_list_; }
+
+private:
+    int id _ ; // missing suffix _
+    std::string file _ name _ ; // CamelCase instead of lower _ case
+    std::vector<User> access _ list _ ;
+};
+} // namespace filesystem
+
+int main() {
+    auto user = filesystem::User{};
+    user.name = "user";
+    user.permissions = filesystem::Permissions::EXECUTE;
+
+    auto file = filesystem::File{0, "~/home/user/file", {user}};
+
+    return 0;
+}
+\end{cpp}
+
+请注意，不仅更新了类、方法和变量定义，还更新了对它们的引用。此功能使 Clang-Tidy 不仅仅是一个诊断工具，而且还是维护代码库整体质量的宝贵助手。
+
+\mySubsubsection{9.11.1}{重要警告}
+
+使用 Clang-Tidy 时需要考虑一些重要注意事项。让我们来看看：
+
+\begin{itemize}
+\item
+单个实例与多个实例：我们讨论过的 CMake 配置运行单个 Clang-Tidy 实例来检查和修复所有源文件。虽然这对于较小的项目来说可能已经足够，但对于需要进行大量检查的大型代码库来说，这可能会成为瓶颈。在这种情况下，将源代码划分为逻辑组并并行运行多个 Clang-Tidy 实例可能会更有效。此策略可以显著减少扫描整个代码库所需的时间。
+
+\item
+修复前提交：虽然 Clang-Tidy 自动修复问题的能力非常宝贵，但建议仅对已提交到版本控制系统的代码使用此功能。 Clang-Tidy 提供的一些检查可能不稳定，在极少数情况下甚至可能引入错误。事先提交代码可确保您在出现问题时有一个稳定的恢复点。
+
+\item
+语法限制：最后，值得注意的是， Clang-Tidy 可能并不总是与最新的 C++ 语法保持同步。虽然它通常表现非常出色，但在某些情况下，它可能会标记误报或无法处理新的语言功能。例如，假设 User 结构是使用 C++20 指定的初始化程序列表初始化的，如以下示例所示：
+
+\begin{cpp}
+auto user = Filesystem::User{
+    .name _ = "user", .permissions =
+Filesystem::Permissions::execute};
+\end{cpp}
+
+Clang-Tidy 会在其定义中修复 name\_ 变量和 execute 常量，但会完全忽略初始化程序，这最终会导致编译错误。
+\end{itemize}
+
+意识到这些注意事项可以让您更有效地使用 Clang-Tidy 并充分利用其优势，同时降低潜在风险。

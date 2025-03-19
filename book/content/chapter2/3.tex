@@ -1,0 +1,289 @@
+
+副作用和不变性是编程中的两个重要概念，对代码的质量和可维护性有重大影响。
+
+副作用是指执行特定函数或代码片段后程序状态发生的变化。副作用可以是显性的，例如将数据写入文件或更新变量，也可以是隐性的，例如修改全局状态或导致代码其他部分出现意外行为。
+
+另一方面，不变性是指变量或数据结构在创建后无法修改的属性。在函数式编程中，不变性是通过使数据结构和变量保持恒定并避免副作用来实现的。
+
+避免副作用和使用不可变变量的重要性在于，它们使代码更易于理解、调试和维护。当代码几乎没有副作用时，更容易推断出它做什么和不做什么。这使得查找和修复错误以及更改代码变得更容易，而不会影响系统的其他部分。
+
+相比之下，具有许多副作用的代码更难理解，因为程序的状态可能会以意想不到的方式发生变化。这使得调试和维护更加困难，并可能导致错误和意外行为。
+
+函数式编程语言长期以来一直强调使用不变性和避免副作用，但现在可以使用 C++ 编写具有这些属性的代码。实现它的最简单方法是遵循 C++ 常量和不变性核心指南。
+
+\mySubsubsection{2.3.1}{Con.1 : 默认情况下，使对象不可变}
+
+您可以将内置数据类型或用户定义数据类型的实例声明为常量，产生相同的效果。尝试修改它将导致编译器错误：
+
+\begin{cpp}
+struct Data {
+    int val{42};
+};
+
+int main() {
+    const Data data;
+    data.val = 43; // assignment of member 'Data::val' in
+                   // read-only object
+    const int val{42};
+    val = 43; // assignment of read-only variable 'val'
+}
+\end{cpp}
+
+这同样适用于循环：
+
+\begin{cpp}
+for (const int i : array) {
+    std::cout << i << std::endl; // just reading: const
+}
+
+for (int i : array) {
+    std::cout << i << std::endl; // just reading: non-const
+}
+\end{cpp}
+
+这种方法可以防止难以察觉的价值变化。
+
+可能唯一的例外是通过值传递的函数参数：
+
+\begin{cpp}
+void foo(const int value);
+\end{cpp}
+
+此类参数很少以 const 形式传递，也很少发生变异。为了避免混淆，建议在这种情况下不要强制执行此规则。
+
+\mySubsubsection{2.3.2}{Con.2 : 默认情况下，使成员函数成为 const}
+
+成员函数(方法)除非会改变对象的可观察状态，否则应标记为 const。这样做的原因是为了更精确地陈述设计意图、提高可读性和可维护性、让编译器捕获更多错误，并且理论上有更多优化机会：
+
+\begin{cpp}
+class Book {
+public:
+    std::string name() { return name_; }
+
+private:
+    std::string name_;
+};
+
+void print(const Book& book) {
+    cout << book.name()
+        << endl; // ERROR: 'this' argument to member
+                 // function
+                 // 'name' has type 'const Book', but
+                 // function is not marked
+                 // const clang(member_function_call_bad_cvr)
+}
+\end{cpp}
+
+常量有两种类型：物理的和逻辑的：
+
+物理常量：一个对象被声明为 const 并且不能改变。
+
+逻辑常量性：一个对象被声明为常量，但可以改变。
+
+逻辑常量性可以通过 mutable 关键字实现。一般来说，这是一个罕见的用例。我能想到的唯一好例子是存储在内部缓存中或使用互斥锁
+
+\begin{cpp}
+class DataReader {
+public:
+    Data read() const {
+        auto lock = std::lock_guard<std::mutex>(mutex);
+        // read data
+        return Data{};
+    }
+private:
+    mutable std::mutex mutex;
+};
+\end{cpp}
+
+在这个例子中，我们需要改变互斥变量来锁定它，但这不会影响对象的逻辑常量性。
+
+请注意，存在一些遗留代码/库，它们提供声明 T* 的函数，尽管未对 T 进行任何更改。这给试图将所有逻辑上恒定的方法标记为 const 的个人带来了问题。为了强制执行常量性，您可以执行以下操作：
+
+\begin{itemize}
+\item
+将库/代码更新为 const-correct，这是首选解决方案。
+
+\item
+提供一个包装函数来抛弃常量性。
+\end{itemize}
+
+例子
+
+\begin{cpp}
+void read_data(int* data); // Legacy code: read_data does
+                           // not modify `*data`
+
+void read_data(const int* data) {
+    read_data(const_cast<int*>(data));
+}
+\end{cpp}
+
+注意，此解决方案是一个补丁，仅当 read\_data 的声明无法修改时才可使用。
+
+\mySubsubsection{2.3.3}{Con.3 : 默认情况下，将指针和引用传递给 const}
+
+这个很简单；当被调用的函数不修改状态时，推理程序就容易得多。
+
+让我们看一下以下两个函数：
+
+\begin{cpp}
+void foo(char* p);
+void bar(const char* p);
+\end{cpp}
+
+foo 函数会修改 p 指针指向的数据吗？我们无法通过查看声明来回答，因此我们默认它会修改。但是， bar 函数明确指出 p 的内容不会被更改。
+
+\mySubsubsection{2.3.4}{Con.4 : 使用 const 定义其值在构造后不会改变的对象}
+
+这条规则与第一条非常相似，强制执行那些预计将来不会改变的对象的常量性。它通常对在应用程序开始时创建且在其生命周期内不会改变的类(如 Config)很有帮助：
+
+\begin{cpp}
+class Config {
+public:
+    std::string hostname() const;
+    uint16_t port() const;
+};
+
+int main(int argc, char* argv[]) {
+    const Config config = parse_args(argc, argv);
+    run(config);
+}
+\end{cpp}
+
+\mySubsubsection{2.3.5}{Con.5 : 使用 constexpr 来表示可以在编译时计算的值}
+
+如果变量值是在编译时计算的，则将变量声明为 constexpr 优于 const。 constexpr 具有以下优点：性能更佳、编译时检查更完善、编译时评估有保证，并且不存在竞争条件。
+
+\mySubsubsection{2.3.6}{常量和数据竞争}
+
+当多个线程同时访问共享变量，并且至少有一个线程试图修改它时，就会发生数据争用。有同步原语(如互斥锁、临界区、自旋锁和信号量)可以防止数据争用。这些原语的问题在于它们要么执行昂贵的系统调用，要么过度使用 CPU，从而降低代码效率。但是，如果没有线程修改变量，则不会发生数据争用。我们了解到 constexpr 是线程安全的(不需要同步)，因为它是在编译时定义的。那么 const 呢？在以下条件下它可以是线程安全的。
+
+该变量自创建以来一直是 const。如果线程对该变量具有直接或间接(通过指针或引用)非常量访问，则所有读取者都需要使用互斥锁。以下代码片段说明了来自多个线程的常量和非常量访问：
+
+\begin{cpp}
+void a() {
+    auto value = int{42};
+    auto t = std::thread([&]() { std::cout << value; });
+    t.join();
+}
+
+void b() {
+    auto value = int{42};
+    auto t = std::thread([&value = std::as_const(value)]() {
+        std::cout << value;
+    });
+    t.join();
+}
+
+void c() {
+    const auto value = int{42};
+    auto t = std::thread([&]() {
+        auto v = const_cast<int&>(value);
+        std::cout << v;
+    });
+    t.join();
+}
+
+void d() {
+    const auto value = int{42};
+    auto t = std::thread([&]() { std::cout << value; });
+    t.join();
+}
+\end{cpp}
+
+在函数 a 中，主线程和 t 都拥有 value 变量作为非常量，这使得代码可能不是线程安全的( 如果开发人员决定稍后在主线程中更改该值)。在函数 b 中，主线程可以"写入" value，而 t 通过 const 引用接收它，但它仍然不是线程安全的。函数 c 是一个非常糟糕的代码的示例：在主线程中将值创建为常量并作为 const 引用传递，但随后 constness 被抛弃，这使得该函数不是线程安全的。只有函数 d 是线程安全的，因为主线程和 t 都无法修改变量。
+
+变量的数据类型及其所有子类型要么在物理上是常量，要么其逻辑常量实现是线程安全的。例如，在下面的例子中， Point 结构在物理上是常量，因为其 x 和 y 字段成员是原始整数，并且两个线程都只能对其进行 const 访问：
+
+\begin{cpp}
+struct Point {
+    int x;
+    int y;
+};
+
+void foo() {
+    const auto point = Point{.x = 10, .y = 10};
+    auto t = std::thread([&]() { std::cout <<
+        point.x; });
+    t.join();
+}
+\end{cpp}
+
+我们之前看到的 DataReader 类在逻辑上是常量，因为它有一个可变变量 mutex，但这个实现也是线程安全的(由于锁)：
+
+\begin{cpp}
+class DataReader {
+public:
+    Data read() const {
+        auto lock = std::lock_guard<std::mutex>(mutex);
+        // read data
+        return Data{};
+    }
+private:
+    mutable std::mutex mutex;
+};
+\end{cpp}
+
+但是，让我们看看以下情况。 RequestProcessor 类处理一些繁重的请求并将结果缓存在内部变量中：
+
+\begin{cpp}
+class RequestProcessor {
+public:
+    Result process(uint64_t request_id,
+    Request request) const {
+        if (auto it = cache_.find(request_id); it !=
+        cache_.cend()) {
+            return it->second;
+        }
+        // process request
+        // create result
+        auto result = Result{};
+        cache_[request_id] = result;
+        return result;
+    }
+
+private:
+    mutable std::unordered_map<uint64_t, Result> cache_;
+};
+
+void process_request() {
+    auto requests = std::vector<std::tuple<uint64_t,
+        Request>>{};
+    const auto processor = RequestProcessor{};
+    for (const auto& request : requests) {
+        auto t = std::thread([&]() {
+            processor.process(std::get<0>(request),
+            std::get<1>(request));
+        });
+        t.detach();
+    }
+}
+\end{cpp}
+
+这个类在逻辑上是安全的，但是cache\_变量是以非线程安全的方式改变的，这使得即使声明为const，该类也是非线程安全的。
+
+请注意，在使用 STL 容器时，必须记住，尽管当前实现趋向于线程安全(物理和逻辑上) ，但标准提供了非常具体的线程安全保证。
+
+容器中的所有函数都可以由不同容器上的各种线程同时调用。广义上讲， C++ 标准库中的函数不会读取其他线程可访问的对象，除非可以通过函数参数(包括 this 指针)访问它们。
+
+所有 const 成员函数都是线程安全的，这意味着它们可以由同一容器上的多个线程同时调用。此外， begin()、 end()、 rbegin()、 rend()、 front()、 back()、 data()、 find()、 lower\_bound()、 upper\_bound()、 equal\_range()、 at() 和 operator[](关联容器除外)成员函数在线程安全方面也表现为 const。换句话说，它们也可以由同一容器上的多个线程调用。广义上讲， C++ 标准库函数不会修改对象，除非这些对象可以通过函数的非 const 参数(包括 this 指针)直接或间接访问。
+
+同一容器中的不同元素可由不同线程同时更改， std::vector<bool> 元素除外。例如， std::future 对象的 std::vector 可同时从多个线程接收值。
+
+对迭代器执行的操作(例如递增迭代器)会读取底层容器，但不会对其进行修改。这些操作可以与对同一容器的其他迭代器执行的操作、使用 const 成员函数执行的操作或从元素执行的读取操作同时执行。但是，使任何迭代器失效的操作都会修改容器，因此不得与对现有迭代器执行的任何操作同时执行，即使这些迭代器尚未失效。
+
+同一容器的元素可以与不访问这些元素的成员函数同时更改。广义上讲， C++ 标准库函数不会读取可通过其参数间接访问的对象(包括容器的其他元素)，除非其规范要求。
+
+最后，只要不影响用户可见的结果，容器上的操作(以及算法或其他 C++ 标准库函数)就可以在内部并行化。例如， std::transform 可以并行化，但 std::for\_each 不能，因为它被指定按顺序访问序列中的每个元素。
+
+对一个对象使用单一可变引用这一理念已成为 Rust 编程语言的支柱之一。此规则旨在防止数据竞争。当多个线程同时访问同一可变数据时，就会发生数据竞争，从而导致不可预测的行为和潜在的崩溃。通过一次只允许对一个对象使用一个可变引用， Rust 可确保对同一数据的并发访问得到正确同步，并避免数据竞争。
+
+此外，此规则有助于防止可变别名，即当对同一数据的多个可变引用同时存在时发生的可变别名。可变别名可能会导致细微的错误并使代码难以推理，尤其是在大型复杂的代码库中。通过只允许对一个对象有一个可变引用， Rust 可以避免可变别名并有助于确保代码正确且易于理解。
+
+但是，值得注意的是， Rust 还允许对一个对象进行多个不可变引用，这在需要并发访问但不需要突变的情况下非常有用。通过允许多个不可变引用， Rust 可以提供更好的性能和并发性，同时仍保持安全性和正确性。
+
+
+
+
+
+

@@ -1,0 +1,65 @@
+使用 CMake 项目设置 Google Test 并编译测试后，运行测试就很简单了。您可以使用构建目录中的 ctest 命令执行测试， CMake 使用该命令运行 CMakeLists.txt 文件中定义的测试。
+
+当你运行计算器类的测试时，如果直接执行测试二进制文件，终端的标准输出可能如下所示：
+
+\begin{shell}
+$ cd path/to/build
+[==========] Running 4 tests from 2 test suites.
+[----------] Global test environment set-up.
+
+[----------] 2 tests from AdditionTests
+[ RUN ] AdditionTests.HandlesZeroInput
+[ OK ] AdditionTests.HandlesZeroInput (0 ms)
+[ RUN ] AdditionTests.HandlesPositiveInput
+[ OK ] AdditionTests.HandlesPositiveInput (0 ms)
+[----------] 2 tests from AdditionTests (0 ms total)
+
+[----------] 2 tests from SubtractionTests
+[ RUN ] SubtractionTests.HandlesZeroInput
+[ OK ] SubtractionTests.HandlesZeroInput (0 ms)
+[ RUN ] SubtractionTests.HandlesPositiveInput
+[ OK ] SubtractionTests.HandlesPositiveInput (0 ms)
+[----------] 2 tests from SubtractionTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 4 tests from 2 test suites ran. (1 ms total)
+[ PASSED ] 4 tests.
+\end{shell}
+
+此输出详细说明了每个测试套件和测试用例，显示运行了哪些测试（\verb|[RUN        ]|）及其结果（\verb|[      OK]| 表示通过了测试）。它清晰地细分了测试过程，包括设置和拆卸阶段，并在最后汇总了结果。
+
+如果使用 ctest 运行测试，默认情况下输出会更简洁：
+
+\begin{shell}
+$ ctest
+Test project /path/to/build
+    Start 1: AdditionTests.HandlesZeroInput
+    1/4 Test #1: AdditionTests.HandlesZeroInput ...... Passed 0.01 sec
+    Start 2: AdditionTests.HandlesPositiveInput
+    2/4 Test #2: AdditionTests.HandlesPositiveInput ... Passed 0.01 sec
+    Start 3: SubtractionTests.HandlesZeroInput
+    3/4 Test #3: SubtractionTests.HandlesZeroInput ..... Passed 0.01 sec
+    Start 4: SubtractionTests.HandlesPositiveInput
+    4/4 Test #4: SubtractionTests.HandlesPositiveInput .. Passed 0.01 sec
+
+100% tests passed, 0 tests failed out of 4
+\end{shell}
+
+在此 ctest 输出中，每行对应一个测试用例，显示其启动顺序、名称和结果。最后的摘要简要概述了测试总数、通过的测试数量和失败的测试数量。这种格式有助于快速评估测试套件的健康状况，而无需 Google Test 输出提供的详细细分。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,185 @@
+让我们准备一个简单的示例来演示 Clang-Format 工具的实际操作。我们将创建一个名为 main.cpp 的基本 C++ 源文件，其中包含一些格式问题。然后，我们将在此文件上运行 Clang-Format 以自动更正格式并生成所做更改的报告：
+
+\begin{cpp}
+#include <iostream>
+
+class Sender {
+public:
+    void send(const std::string& message) {
+        std::cout << "Sending: " << message << std::endl;
+    }
+};
+
+class Receiver {
+public:
+    void receive(const std::string& message) {
+        std::cout << "Receiving: " << message << std::endl;
+    }
+};
+
+class Mediator {
+public:
+    Mediator(Sender sender, Receiver receiver)
+        : sender _ {std::move(sender)}, receiver _ {std::move(receiver)} {}
+    void send(const std::string& message) {
+        sender _ .send(message);
+    }
+
+    void receive(const std::string& message) {
+        receiver _ .receive(message);
+    }
+
+private:
+    Sender sender _ ;
+    Receiver receiver _ ;
+};
+\end{cpp}
+
+我们将尝试使用 Clang-Format 工具和我们之前在 .clang- 格式中定义的规则集对其进行分析：
+
+\begin{shell}
+make check-clang-format
+[100%] Checking code format with clang-format
+/home/user/clang-format/clang _ format.cpp:4:2: error: code should be
+clang-formatted [-Wclang-format-violations]
+{
+ ^
+/home/user/clang-format/clang _ format.cpp:6:42: error: code should be
+clang-formatted [-Wclang-format-violations]
+    void send(const std::string& message){
+                                       ^
+/home/user/clang-format/clang _ format.cpp:7:18: error: code should be
+clang-formatted [-Wclang-format-violations]
+        std::cout<< "Sending: " <<message<< std::endl;
+                  ^
+/home/user/clang-format/clang _ format.cpp:7:35: error: code should be
+clang-formatted [-Wclang-format-violations]
+        std::cout<< "Sending: " <<message<< std::endl;
+                                  ^
+/home/user/clang-format/clang _ format.cpp:7:42: error: code should be
+clang-formatted [-Wclang-format-violations]
+        std::cout<< "Sending: " <<message<< std::endl;
+                                         ^
+/home/user/clang-format/clang _ format.cpp:11:6: error: code should be
+clang-formatted [-Wclang-format-violations]
+class
+     ^
+/home/user/clang-format/clang _ format.cpp:12:9: error: code should be
+clang-formatted [-Wclang-format-violations]
+Receiver {
+        ^
+/home/user/clang-format/clang _ format.cpp:12:11: error: code should be
+clang-formatted [-Wclang-format-violations]
+Receiver {
+          ^
+/home/user/clang-format/clang _ format.cpp:14:36: error: code should be
+clang-formatted [-Wclang-format-violations]
+    void receive(const std::string&message){
+                                   ^
+/home/user/clang-format/clang _ format.cpp:14:44: error: code should be
+clang-formatted [-Wclang-format-violations]
+    void receive(const std::string&message){
+                                            ^
+/home/user/clang-format/clang _ format.cpp:14:45: error: code should be
+clang-formatted [-Wclang-format-violations]
+    void receive(const std::string&message){
+                                             ^
+/home/user/clang-format/clang _ format.cpp:16:6: error: code should be
+clang-formatted [-Wclang-format-violations]
+    }};
+^
+/home/user/clang-format/clang _ format.cpp:18:15: error: code should be
+clang-formatted [-Wclang-format-violations]
+class Mediator{
+      ^
+/home/user/clang-format/clang _ format.cpp:18:16: error: code should be
+clang-formatted [-Wclang-format-violations]
+class Mediator{
+              ^
+/home/user/clang-format/clang _ format.cpp:20:28: error: code should be
+clang-formatted [-Wclang-format-violations]
+    Mediator(Sender sender,Receiver receiver)
+                           ^
+/home/user/clang-format/clang _ format.cpp:21:69: error: code should be
+clang-formatted [-Wclang-format-violations]
+        : sender _ {std::move(sender)}, receiver _ {std::move(receiver)} {}
+                                                                          ^
+/home/user/clang-format/clang _ format.cpp:21:71: error: code should be
+clang-formatted [-Wclang-format-violations]
+        : sender _ {std::move(sender)}, receiver _ {std::move(receiver)} {}
+^
+/home/user/clang-format/clang _ format.cpp:22:44: error: code should be
+clang-formatted [-Wclang-format-violations]
+    void send(const std::string& message) {sender _ .send(message);}
+                                           ^
+/home/user/clang-format/clang _ format.cpp:22:66: error: code should be
+clang-formatted [-Wclang-format-violations]
+    void send(const std::string& message) {sender _ .send(message);}
+                                                                     ^
+/home/user/clang-format/clang _ format.cpp:24:47: error: code should be
+clang-formatted [-Wclang-format-violations]
+    void receive(const std::string& message) {
+                                               ^
+/home/user/clang-format/clang _ format.cpp:25:36: error: code should be
+clang-formatted [-Wclang-format-violations]
+    receiver _ .receive(message);
+                                  ^
+/home/user/clang-format/clang _ format.cpp:26:6: error: code should be
+clang-formatted [-Wclang-format-violations]
+    }
+     ^
+/home/user/clang-format/clang _ format.cpp:28:11: error: code should be
+clang-formatted [-Wclang-format-violations]
+    Sender sender _ ;
+           ^
+make[3]: *** [CMakeFiles/check-clang-format.dir/build.make:71: CMakeFiles/check-clang-format] Error 1
+make[2]: *** [CMakeFiles/Makefile2:139: CMakeFiles/check-clang-format.dir/all] Error 2
+make[1]: *** [CMakeFiles/Makefile2:146: CMakeFiles/check-clang-format.dir/rule] Error 2
+make: *** [Makefile:150: check-clang-format] Error 2
+\end{shell}
+
+如您所见，错误不是很具描述性。但是，大多数时候，开发人员可以了解代码出了什么问题。该工具不仅能够检测问题，还能修复问题。让我们运行该工具来修复格式问题 make clang-format 并查看结果：
+
+\begin{cpp}
+#include <iostream>
+
+class Sender
+{
+public:
+    void send(const std::string& message)
+    {
+        std::cout << "Sending: " << message << std::endl;
+    }
+};
+
+class Receiver
+{
+public:
+    void receive(const std::string& message)
+    {
+        std::cout << "Receiving: " << message << std::endl;
+    }
+};
+
+class Mediator
+{
+public:
+    Mediator(Sender sender, Receiver receiver)
+    : sender _ {std::move(sender)}, receiver _ {std::move(receiver)}
+    {
+    }
+    void send(const std::string& message) { sender _ .send(message); }
+
+    void receive(const std::string& message) { receiver _ .
+        receive(message); }
+
+private:
+    Sender sender _ ;
+    Receiver receiver _ ;
+};
+\end{cpp}
+
+代码现在已正确格式化，可以在项目中使用。此示例可以包含在您的章节中，以展示 Clang -Format 在真实场景中的实际应用。将来，开发人员可以向 .clang-format 文件添加更多格式化规则，并通过运行 make clang-format 命令重新格式化整个项目。
+
+
+

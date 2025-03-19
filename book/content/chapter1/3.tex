@@ -1,0 +1,129 @@
+
+可读性、效率、可维护性和可用性都是编写代码时需要考虑的关键因素。
+
+\mySubsubsection{1.3.1}{可读性}
+
+可读性是指人类读者理解一段代码的难易程度。编写良好的代码易于阅读，语句清晰简洁，组织方式合乎逻辑且一致。如果我们考虑到开发人员阅读代码所花的时间是编写代码的十倍，那么这一点就变得非常重要。
+
+我们来看看下面这段代码：
+
+\begin{cpp}
+class Employee {
+public:
+    std::string get_name();
+    std::string surname();
+    uint64_t getId() const;
+};
+\end{cpp}
+
+此示例是代码不遵循任何代码约定的夸张示例。使用 Employee 类的开发人员可以理解这三个方法都是 getter。但是，名称的差异使得用户花费更多时间来理解代码或尝试理解名称背后的原因。这些方法的名称不同是因为程序员不关心类的一致性吗？或者因为，例如，没有 get 前缀的方法就是简单的 getter，而包含 get 前缀的方法则从文件或数据库中提取数据？
+
+此外，没有 const 的方法是否会改变对象的状态(例如通过缓存)，或者这是一个错误？你知道可以提出多少问题吗？只有当开发人员跳入相应的实现时才能回答这些问题，这意味着浪费时间。使代码在整个代码库中看起来统一有助于开发人员通过查看头文件中的声明或甚至通过现代代码编辑器中的自动完成来理解类、方法和函数的含义和复杂性。
+
+\mySubsubsection{1.3.2}{效率}
+
+效率是指一段代码高效地执行其预期任务的能力。高效的代码使用很少的资源(例如时间和内存)来完成任务，并且能够处理大量数据和流量而不会减慢或崩溃。通过提高代码效率，程序员可以节省时间和资源，并确保他们的代码具有可扩展性，能够满足不断增长的用户群的需求。
+
+有一些万无一失的方法可以优化 C++ 代码，例如通过常量引用传递只读参数以避免不必要的复制，或者在查找单个字符时使用 std::string::find 的字符重载版本以避免创建字符串：
+
+\begin{cpp}
+my_string.find('A');
+my_string.find("A")
+\end{cpp}
+
+然而，实现和保持代码效率的更系统方法是遵循帕累托原则。该原则应用于软件工程时，大约 20\% 的代码完成了 80\% 的工作。例如，通常不需要在后台守护进程启动时优化代码解析配置文件，因为它在程序的生命周期中只会发生一次。然而，避免在主流中复制大型数据结构可能很重要。提高效率的最佳方法包括挑选这 20\% 的性能关键代码并为其添加基准。基准测试预计将作为 CI 过程的一部分运行，以确保不会引入任何性能下降。
+
+此外，端到端测试可以衡量应用程序的整体性能。本书在第 13 章讨论了编写单元测试和端到端测试的最佳实践。需要注意的是，自动化工具无法取代工程师对新代码进行代码审查，主要是因为没有工具可以找到完成 80\% 工作的 20\% 的代码。
+
+\mySubsubsection{1.3.3}{可维护性}
+
+可维护性是指代码随时间推移更新和修改的难易程度。编写良好的代码易于维护，代码清晰且文档齐全，组织方式合乎逻辑且一致。通过提高代码的可维护性，程序员可以让其他人更轻松地更新和修改他们的代码，并确保他们的代码随时间推移保持相关性和实用性。理想情况下，在开发新组件时，开发人员应该考虑代码正在解决的当前问题以及代码的未来使用和扩展。例如，在开发对数据提供程序的支持时，询问该提供程序是否是唯一受支持的提供程序可能会很有用。如果不是，那么考虑数据提供程序的标准功能并将其提取到抽象基类中可能会有所帮助。以下是一个例子：
+
+\begin{cpp}
+class BaseDataProvider {
+public:
+    BaseDataProvider() = default;
+    BaseDataProvider(const BaseDataProvider&) = delete;
+    BaseDataProvider(BaseDataProvider&&) = default;
+    BaseDataProvider& operator = (const BaseDataProvider&) = delete;
+    BaseDataProvider& operator = (BaseDataProvider&&) = default;
+    virtual ~BaseDataProvider() = default;
+    virtual Data getData() const = 0;
+};
+
+class NetworkDataProvider : public BaseDataProvider {
+public:
+    NetworkDataProvider(const Endpoint& endpoint);
+    Data getData() const override;
+};
+
+class FileDataProvider : public BaseDataProvider {
+public:
+    FileDataProvider(const std::string& filename);
+
+    Data getData() const override;
+};
+\end{cpp}
+
+在此示例中， DataProvider 类是一个抽象基类，它定义了用于提供数据的接口。 NetworkDat aProvider 和 FileDataProvider 类派生自 DataProvider，并重写 getData 虚拟函数，以分别提供从文件或网络端点读取数据的具体实现。这种设计使得添加新数据源变得很容易，只需创建一个派生自 DataProvider 的新类并为 getData 虚拟函数提供适当的实现即可。
+
+从示例中可以清楚地看出，基类接口可能不仅包括功能，还包括对象的复制移动策略。稍后，用户代码可以参考基类接收数据提供程序，并且与提供程序的类型无关，如以下代码片段所示：
+
+\begin{cpp}
+class DataParser {
+public:
+    DataParser(const BaseDataProvider& provider);
+    void parse();
+};
+\end{cpp}
+
+此外，在为 DataParser 创建单元测试时，此继承可用于模拟数据提供者。单元测试将在第 13 章中详细介绍。
+
+另外，重要的是不要让代码过于复杂，也不要为任何变化做好准备。否则，让一切都可扩展的需求可能会导致出现像以下代码片段这样的怪物：
+
+\begin{cpp}
+#define BASE_CLASS(TYPE) \
+    template <typename T> \
+    class TYPE { \
+    public: \
+        T value; \
+        TYPE(T val) : value(val) {} \
+    };
+
+#define DERIVED_CLASS(TYPE, BASE) \
+    template <typename T> \
+    class TYPE : public BASE<T> { \
+    public: \
+        TYPE(T val) : BASE<T>(val) {} \
+        T getValue() { return value; } \
+    };
+
+BASE_CLASS(Base);
+DERIVED_CLASS(Derived, Base);
+
+int main() {
+    Derived<int> obj(5);
+    std::cout << obj.getValue() << std::endl;
+    return 0;
+}
+\end{cpp}
+
+这个类层次结构不必要地复杂，因为它使用了几乎所有 C++ 功能：继承、模板和宏。虽然使用模板继承是一种常见做法，但如今宏被视为反模式。在此示例中，与 Base 类相比， Derived 类添加的附加功能非常少，直接将 getValue 方法添加到 Base 类会更简单。使用继承和模板在某些情况下很有用，但重要的是要适当使用它们，不要过度使用它们。宏可能特别难以理解和维护，因为它们在编译代码之前由预处理器扩展，因此很难看到实际代码是什么样子。通常，只要可能，最好使用函数或模板函数而不是宏。
+
+如果扩展的可能性较低，则最好保持其结构简单并贴近基本需求。您如何决定采用哪种方法？嗯，冷静的考虑和代码审查是找出答案的方法。
+
+\mySubsubsection{1.3.4}{可用性}
+
+可用性是指一段代码可供他人使用的难易程度。编写良好的代码易于使用，具有清晰直观的界面和文档，使其他人可以轻松理解和使用代码。通过提高代码的可用性，程序员可以使他们的代码更易于他人访问和使用，并确保他们的代码被广泛采用和使用。
+
+总体而言，可读性、效率、可维护性和可用性都是编写代码时需要考虑的重要因素。通过改善这些因素，程序员可以编写出更易于理解、维护和使用的代码。
+
+
+
+
+
+
+
+
+
+

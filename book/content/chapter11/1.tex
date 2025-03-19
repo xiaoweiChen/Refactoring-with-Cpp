@@ -1,0 +1,1153 @@
+基于编译器的清理器包含两部分：编译器检测和运行时诊断：
+
+\begin{itemize}
+\item
+编译器检测：在启用清理程序的情况下编译 C++ 代码时，编译器会对生成的二进制文件进行额外的检查。这些检查会策略性地插入到代码中，以监控特定类型的错误。例如， ASan 会添加代码来跟踪内存分配和访问，使其能够检测内存滥用，例如缓冲区溢出和内存泄漏。
+
+\item
+运行时诊断：在被检测的程序运行时，这些检查会主动监控程序的行为。当清理程序检测到错误（例如内存访问冲突或数据争用）时，它会立即报告此情况，通常会提供有关错误位置和性质的详细信息。这种实时反馈对于识别和修复传统测试难以发现的难以捉摸的错误非常有用。
+\end{itemize}
+
+尽管所有编译器团队都在不断致力于添加新的清理程序并改进现有的清理程序，但基于编译器的清理程序仍然存在一些局限性：
+
+\begin{itemize}
+\item
+Clang 和 GCC：大多数清理程序（包括 ASan、 TSan 和 UBSan）都受 Clang 和 GCC 支持。这种广泛支持使得 C++ 开发社区的很大一部分人都可以使用它们，无论首选编译器是什么。
+
+\item
+Microsoft Visual C++ (MSVC)： MSVC 还支持一些清理程序，但范围和功能可能与 Clan g 和 GCC 中的不同。例如， MSVC 支持 ASan，这对于特定于 Windows 的 C++ 开发非常有用。
+
+\item
+跨平台实用程序：这些工具的跨编译器和跨平台特性意味着它们可以在各种开发环境中使用，从 Linux 和 macOS 到 Windows，从而增强它们在各种 C++ 项目中的实用性。
+\end{itemize}
+
+\mySubsubsection{11.1.1}{ASan}
+
+ASan 是一种运行时内存错误检测器，是 LLVM 编译器基础结构、 GCC 和 MSVC 的一部分。它是一种专门为开发人员设计的工具，用于识别和解决各种与内存相关的错误，包括但不限于缓冲区溢出、悬空指针访问和内存泄漏。
+
+该工具通过在编译过程中检测代码来实现这一点，使其能够在运行时监视内存访问和分配。
+
+ASan 的主要优势之一是它能够提供详细的错误报告。检测到内存错误时， ASan 会输出全面的信息，包括错误类型、涉及的内存位置和堆栈跟踪。这种详细程度极大地帮助了调试过程，使开发人员能够快速查明问题的根源。
+
+将 ASan 集成到 C++ 开发工作流程中非常简单。它只需要对构建过程进行最少的更改，通常涉及在编译期间添加编译器标志 (-fsanitize=address)。为了获得更好的结果，使用合理的性能 adda-O1 或更高版本是有意义的。要在错误消息中获得更好的堆栈跟踪，请添加 -fno-omit-frame-pointer。这种易于集成的特性，加上其在捕获内存错误方面的有效性，使 ASan 成为旨在增强其 C++ 应用程序可靠性和安全性的开发人员不可或缺的工具。
+
+\mySamllsectionNoContent{在 ASan 中符号化报告}
+
+使用 ASan 检测 C++ 应用程序中的内存错误时，对错误报告进行符号化至关重要。符号化将 ASan 输出中的内存地址和偏移量转换为人类可读的函数名称、文件名和行号。此过程对于有效调试至关重要，因为它使开发人员能够轻松识别源代码中发生内存错误的位置。
+
+如果没有符号化， ASan 报告提供的原始内存地址意义就会减弱，因此很难追溯到源代码中发生错误的确切位置。另一方面，符号化报告提供了清晰且可操作的见解，使开发人员能够快速了解和修复代码中的底层问题。
+
+ASan 符号化的配置通常是自动的，不需要额外的步骤。但是，在某些情况下，您可能需要明确设置 ASAN\_SYMBOLIZER\_PATH 环境变量以指向符号化工具。在非 Linux Unix 系统上尤其如此，在这些系统中，可能需要使用 addr2line 等其他工具进行符号化。如果它不能立即使用，请按照以下步骤操作以确保正确配置符号化：
+
+\begin{enumerate}
+\item
+编译时带调试信息：
+
+\begin{itemize}
+\item
+确保你的程序编译时带有调试信息。这通常通过在编译命令中添加 -g 标志来实现。例如：
+
+\begin{shell}
+clang++ -fsanitize=address -g -o your_program your_file.cpp
+\end{shell}
+
+\item
+使用 -g 进行编译包括二进制文件中的调试符号，这对于符号化至关重要。
+\end{itemize}
+
+\item
+使用 ASan 符号器：
+
+\begin{itemize}
+\item
+如果您的系统上有所需的工具， ASan 通常会自动配置其符号化器。这意味着符号化通常开箱即用。
+
+\item
+在类 Unix 系统上， ASan 默认使用 LLVM 符号器。确保 llvm-symbolizer 工具位于系统的 PATH 中。
+\end{itemize}
+
+\item
+检查附加工具（可选）：
+
+\begin{itemize}
+\item
+在某些系统上，尤其是非 Linux Unix 系统，您可能需要额外的工具进行符号化。
+
+\item
+诸如 addr2line（GNU Binutils 的一部分）之类的工具可用于符号化堆栈跟踪。
+\end{itemize}
+
+\item
+环境变量（如果需要）：
+
+\begin{itemize}
+\item
+如果自动符号化不起作用，您可以设置 ASAN\_SYMBOLIZER\_PATH 环境变量以指向符号化工具。例如：
+
+\begin{shell}
+export ASAN_SYMBOLIZER_PATH=/path/to/llvm-symbolizer
+\end{shell}
+
+\item
+这明确地告诉 ASan 使用哪个符号器。
+\end{itemize}
+
+\item
+运行程序：
+
+\begin{itemize}
+\item
+照常运行编译后的程序。如果检测到内存错误， ASan 将输出符号化的堆栈跟踪。
+
+\item
+报告将包括函数名称、文件名和行号，从而更容易定位和解决代码中的错误。
+\end{itemize}
+\end{enumerate}
+
+\mySamllsectionNoContent{越界访问}
+
+让我们尝试捕捉 C++ 编程中最严重的错误之一：越界访问。此问题涉及内存管理的各个部分 - 堆、堆栈和全局变量，每个部分都存在独特的挑战和风险。
+
+\mySamllsectionNoContent{堆上的越界访问}
+
+我们首先探索堆上的越界访问，其中动态内存分配可能导致指针超出分配的内存边界。考虑以下示例：
+
+\begin{cpp}
+int main() {
+    int *heapArray = new int[5];
+    heapArray[5] = 10; // Out-of-bounds write on the heap
+    delete[] heapArray;
+    return 0;
+}
+\end{cpp}
+
+此代码片段演示了越界写入，尝试访问超出分配范围的索引，从而导致未定义的行为和潜在的内存损坏。
+
+如果我们在启用 ASan 的情况下运行此代码，我们将获得以下输出：
+
+\begin{shell}
+make && ./a.out
+=================================================================
+==3102850==ERROR: AddressSanitizer: heap-buffer-overflow on
+address 0x603000000054 at pc 0x55af5525f222 bp 0x7ffde596fb60 sp
+0x7ffde596fb50
+WRITE of size 4 at 0x603000000054 thread T0
+#0 0x55af5525f221 in main /home/user/clang-sanitizers/main.cpp:3
+    #1 0x7f1ad0a29d8f (/lib/x86_64-linux-gnu/libc.so.6+0x29d8f)
+    #2 0x7f1ad0a29e3f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x29e3f)
+    #3 0x55af5525f104 in _start (/home/user/clang-sanitizers/build/a.
+out+0x1104)
+0x603000000054 is located 0 bytes to the right of 20-byte region
+[0x603000000040,0x603000000054)
+allocated by thread T0 here:
+    #0 0x7f1ad12b6357 in operator new[](unsigned long) ../../../../src/libsanitizer/asan/asan_new_delete.cpp:102
+    #1 0x55af5525f1de in main /home/user/clang-sanitizers/main.cpp:2
+    #2 0x7f1ad0a29d8f (/lib/x86_64-linux-gnu/libc.so.6+0x29d8f)
+
+SUMMARY: AddressSanitizer: heap-buffer-overflow /home/user/clangsanitizers/main.cpp:3 in main
+Shadow bytes around the buggy address:
+    0x0c067fff7fb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x0c067fff7fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x0c067fff7fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x0c067fff7fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x0c067fff7ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x0c067fff8000: fa fa 00 00 00 fa fa fa 00 00[04]fa fa fa fa fa
+    0x0c067fff8010: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+    0x0c067fff8020: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+    0x0c067fff8030: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+    0x0c067fff8040: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+    0x0c067fff8050: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+    Addressable: 00
+    Partially addressable: 01 02 03 04 05 06 07
+    Heap left redzone: fa
+    Freed heap region: fd
+    Stack left redzone: f1
+    Stack mid redzone: f2
+    Stack right redzone: f3
+    Stack after return: f5
+    Stack use after scope: f8
+    Global redzone: f9
+    Global init order: f6
+    Poisoned by user: f7
+    Container overflow: fc
+    Array cookie: ac
+    Intra object redzone: bb
+    ASan internal: fe
+    Left alloca redzone: ca
+    Right alloca redzone: cb
+    Shadow gap: cc
+==3102850==ABORTING
+\end{shell}
+
+如您所见，报告包含详细的堆栈跟踪，突出显示源代码中错误的确切位置。这些信息对于调试和修复问题非常有用。
+
+\mySamllsectionNoContent{栈上的越界访问}
+
+接下来，我们重点关注堆栈。在这里，由于索引不正确或缓冲区溢出，局部变量经常发生越界访问。例如：
+
+\begin{cpp}
+int main() {
+    int stackArray[5];
+    stackArray[5] = 10; // Out-of-bounds write on the stack
+    return 0;
+}
+\end{cpp}
+
+在这种情况下，访问 stackArray[5] 超出范围，因为有效索引从 0 到 4。此类错误可能会导致崩溃或可利用的漏洞。此示例的 ASan 输出与上一个非常相似：
+
+\begin{shell}
+==3190568==ERROR: AddressSanitizer: stack-buffer-overflow on
+address 0x7ffd166961e4 at pc 0x55b4cd113295 bp 0x7ffd166961a0 sp
+0x7ffd16696190
+WRITE of size 4 at 0x7ffd166961e4 thread T0
+    #0 0x55b4cd113294 in main /home/user/clang-sanitizers/main.cpp:3
+    #1 0x7f90fc829d8f (/lib/x86_64-linux-gnu/libc.so.6+0x29d8f)
+    #2 0x7f90fc829e3f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x29e3f)
+    #3 0x55b4cd113104 in _start (/home/user/clang-sanitizers/build/a.out+0x1104)
+
+Address 0x7ffd166961e4 is located in stack of thread T0 at offset 52
+in frame
+        #0 0x55b4cd1131d8 in main /home/user/clang-sanitizers/main.cpp:1
+
+    This frame has 1 object(s):
+        [32, 52) 'stackArray' (line 2) <== Memory access at offset 52
+overflows this variable
+HINT: this may be a false positive if your program uses some custom
+stack unwind mechanism, swapcontext or vfork
+        (longjmp and C++ exceptions *are* supported)
+SUMMARY: AddressSanitizer: stack-buffer-overflow /home/user/clangsanitizers/main.cpp:3 in main
+Shadow bytes around the buggy address:
+    0x100022ccabe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x100022ccabf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x100022ccac00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x100022ccac10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x100022ccac20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x100022ccac30: 00 00 00 00 00 00 f1 f1 f1 f1 00 00[04]f3 f3 f3
+    0x100022ccac40: f3 f3 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x100022ccac50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x100022ccac60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x100022ccac70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x100022ccac80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Shadow byte legend (one shadow byte represents 8 application bytes):
+    Addressable: 00
+    Partially addressable: 01 02 03 04 05 06 07
+    Heap left redzone: fa
+    Freed heap region: fd
+    Stack left redzone: f1
+    Stack mid redzone: f2
+    Stack right redzone: f3
+    Stack after return: f5
+    Stack use after scope: f8
+    Global redzone: f9
+    Global init order: f6
+    Poisoned by user: f7
+    Container overflow: fc
+    Array cookie: ac
+    Intra object redzone: bb
+    ASan internal: fe
+    Left alloca redzone: ca
+    Right alloca redzone: cb
+    Shadow gap: cc
+==3190568==ABORTING
+\end{shell}
+
+\mySamllsectionNoContent{越界访问全局变量}
+
+最后，我们来检查一下全局变量。当访问超出其定义的范围时，它们也容易受到类似的风险：
+
+\begin{cpp}
+int globalArray[5];
+int main() {
+    globalArray[5] = 10; // Out-of-bounds access to a global array
+    return 0;
+}
+\end{cpp}
+
+此处，尝试写入 globalArray[5] 是越界操作，会导致未定义的行为。由于 ASan 的输出与前面的示例类似，因此我们不会在此处提及。
+
+\mySamllsectionNoContent{解决 C++ 中的释放后使用漏洞}
+
+在下一节中，我们将解决 C++ 编程中一个关键且通常具有挑战性的问题：释放后使用漏洞。当程序在释放内存位置后继续使用内存位置时，就会发生此类错误，从而导致未定义的行为、程序崩溃、安全漏洞和数据损坏。我们将在各种情况下探讨这个问题，并提供有关如何识别和预防这个问题的见解。
+
+\mySamllsectionNoContent{动态内存（堆）中的释放后使用}
+
+最常见的使用后释放错误情况发生在堆上动态分配的内存中。请考虑以下示例：
+
+\begin{cpp}
+#include <iostream>
+
+template <typename T>
+struct Node {
+    T data;
+    Node *next;
+    Node(T val) : data(val), next(nullptr) {}
+};
+
+int main() {
+    auto *head = new Node(1);
+    auto *temp = head;
+    head = head->next;
+    delete temp;
+    std::cout << temp->data; // Use-after-free in a linked list
+    return 0;
+}
+\end{cpp}
+
+\mySamllsectionNoContent{对象引用的释放后使用}
+
+面向对象编程中也可能发生 UAF，尤其是在处理已销毁对象的引用或指针时。例如：
+
+\begin{cpp}
+class Example {
+    public:
+    int value;
+    Example() : value(0) {}
+};
+
+Example* obj = new Example();
+Example& ref = *obj;
+delete obj;
+std::cout << ref.value; // Use-after-free through a reference
+\end{cpp}
+
+这里， ref 指的是一个已经被删除的对象，删除之后对 ref 的任何操作都会导致 use-after-free 。
+
+\mySamllsectionNoContent{复杂数据结构中的 Use-After-Free}
+
+复杂的数据结构（例如链表或树）也容易出现使用后释放错误，尤其是在删除或重组操作期间。例如：
+
+\begin{cpp}
+struct Node {
+    int data;
+    Node* next;
+    Node(int val) : data(val), next(nullptr) {}
+};
+
+Node* head = new Node(1);
+Node* temp = head;
+head = head->next;
+delete temp;
+std::cout << temp->data; // Use-after-free in a linked list
+\end{cpp}
+
+在这种情况下， temp 在释放后被使用，这可能会导致严重问题，特别是当列表很大或属于关键系统组件的一部分时。
+
+ASan 可以帮助检测 C++ 程序中的 use-after-free 错误。例如，如果我们在启用 ASan 的情况下运行前面的示例，我们将得到以下输出：
+
+\begin{shell}
+make && ./a.out
+Consolidate compiler generated dependencies of target a.out
+[100%] Built target a.out
+=================================================================
+==3448347==ERROR: AddressSanitizer: heap-use-after-free on
+address 0x602000000010 at pc 0x55fbcc2ca3b2 bp 0x7fff2f3af7a0 sp
+0x7fff2f3af790
+READ of size 4 at 0x602000000010 thread T0
+    #0 0x55fbcc2ca3b1 in main /home/user/clang-sanitizers/main.cpp:15
+    #1 0x7efdb6429d8f (/lib/x86_64-linux-gnu/libc.so.6+0x29d8f)
+    #2 0x7efdb6429e3f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x29e3f)
+    #3 0x55fbcc2ca244 in _start (/home/user/clang-sanitizers/build/a.out+0x1244)
+\end{shell}
+
+\mySamllsectionNoContent{ASan 中的使用后返回检测}
+
+返回后使用是 C++ 编程中的一种内存错误，其中函数返回指向本地（堆栈分配）变量的指针或引用。函数返回后，此本地变量将不复存在，从而使通过返回的指针或引用进行的任何后续访问无效且危险。这可能导致未定义的行为和潜在的安全漏洞。
+
+ASan 提供了一种检测 use-after-return 错误的机制。可以在编译期间使用 -fsanitize-address-use-after-return 标志并在运行时使用 ASAN\_OPTIONS 环境变量来控制该机制。
+
+下面介绍了使用后返回检测的配置：
+
+\begin{itemize}
+\item
+编译标志： -fsanitize-address-use-after-return=(never|runtime|always)
+
+该标志接受三种设置：
+
+\begin{itemize}
+\item
+never：禁用使用后返回检测
+
+\item
+runtime：启用检测，但可以在运行时覆盖（默认设
+置）
+
+\item
+always：始终启用检测，与运行时设置无关
+\end{itemize}
+
+\item
+运行时配置：
+
+要在运行时明确启用或禁用使用后返回检测，请使用 ASAN\_OPTIONS 环境变量：
+
+\begin{itemize}
+\item
+启用： ASAN\_OPTIONS=detect\_stack\_use\_after\_return=1
+
+\item
+禁用： ASAN\_OPTIONS=detect\_stack\_use\_after\_return=0
+
+\item
+在 Linux 上，默认启用检测
+\end{itemize}
+
+\end{itemize}
+
+以下是其用法的示例：
+
+\begin{enumerate}
+\item
+启用 use-after-return 检测进行编译：
+
+\begin{shell}
+clang++ -fsanitize=address -fsanitize-address-use-afterreturn=always -g -o your_program your_file.cpp
+\end{shell}
+
+该命令用ASan编译your\_file.cpp，并显式启用use-after-return检测。
+
+\item
+开启/关闭检测运行：
+
+\begin{itemize}
+\item
+要运行启用了使用后返回检测的程序（在非默认平台上）：
+
+\begin{shell}
+ASAN_OPTIONS=detect_stack_use_after_return=1 ./your_program
+\end{shell}
+
+\item
+要禁用检测，即使它在编译时已启用：
+
+\begin{shell}
+ASAN_OPTIONS=detect_stack_use_after_return=0 ./your_program
+\end{shell}
+\end{itemize}
+\end{enumerate}
+
+\mySamllsectionNoContent{演示 use-after-return 的示例代码}
+
+提供的 C++ 代码示例演示了使用后返回场景，这是由从函数返回对局部变量的引用而导致的一种未定义行为。让我们分析一下这个例子，并了解其含义：
+
+\begin{cpp}
+#include <iostream>
+const std::string &get_binary_name() {
+    const std::string name = "main";
+    return name; // Returning address of a local variable
+}
+int main() {
+    const auto &name = get_binary_name();
+    // Use after return: accessing memory through name is undefined behavior
+    std::cout << name << std::endl;
+    return 0;
+}
+\end{cpp}
+
+在给定的代码示例中， get\_binary\_name 函数旨在创建一个名为 name 的本地 std::string 对象并返回对它的引用。关键问题在于 name 是一个局部变量，一旦函数作用域结束，该变量就会被销毁。因此， get\_binary\_name 返回的引用在函数退出时变为无效。
+
+在主函数中，这个返回的引用（现在存储在 name 中）用于访问字符串值。但是，由于 nam e 引用了已被销毁的局部变量，因此以这种方式使用它会导致未定义的行为。这是一个典型的使用后返回错误示例，程序尝试访问不再有效的内存。
+
+该函数的预期功能似乎是返回程序的名称。但是，为了使其正常工作， name 变量应该具有静态或全局生存期，而不是局限于 get\_binary\_name 函数的局部变量。这将确保返回的引用在函数范围之外仍然有效，从而避免使用后返回错误。
+
+现代编译器具备对可能存在问题的代码模式发出警告的功能，例如返回对局部变量的引用。在我们的示例中，编译器可能会将返回局部变量引用标记为警告，表示可能存在使用后返回错误。
+
+但是，为了有效展示 ASan 捕获 use-after-return 错误的能力，有时需要绕过这些编译时警告。这可以通过明确禁用编译器的警告来实现。例如，通过在编译命令中添加 -Wno-return-local-addr 标志，我们可以阻止编译器发出有关返回本地地址的警告。这样做使我们能够将重点从编译时检测转移到运行时检测，其中可以更突出地显示和测试 ASan 识别 use-after-return 错误的能力。这种方法强调了 ASan 的运行时诊断优势，特别是在编译时分析可能不够的情况下。
+
+\mySamllsectionNoContent{使用 ASan 进行编译}
+
+要使用 ASan 的 use-after-return 检测来编译此程序，您可以使用以下命令：
+
+\begin{shell}
+clang++ -fsanitize=address -Wno-return-local-addr -g your_file.cpp -o your_program
+\end{shell}
+
+此命令在启用 ASan 的情况下编译程序，同时抑制有关返回局部变量地址的特定编译器警告。运行编译后的程序将允许 ASan 在运行时检测并报告 use-after-return 错误：
+
+\begin{shell}
+Consolidate compiler generated dependencies of target a.out
+[100%] Built target a.out
+AddressSanitizer:DEADLYSIGNAL
+=================================================================
+==4104819==ERROR: AddressSanitizer: SEGV on unknown address
+0x000000000008 (pc 0x7f74e354f4c4 bp 0x7ffefcd298e0 sp 0x7ffefcd298c8
+T0)
+==4104819==The signal is caused by a READ memory access.
+==4104819==Hint: address points to the zero page.
+    #0 0x7f74e354f4c4 in std::basic_ostream<char, std::char_traits<char> >& std::operator<< <char, std::char_traits<char>, std::allocator<char> >(std::basic_ostream<char, std::char_traits<char> >&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (/lib/x86_64-linux-gnu/libstdc++.so.6+0x14f4c4)
+    #1 0x559799ab4785 in main /home/user/clang-sanitizers/main.cpp:11
+    #2 0x7f74e3029d8f (/lib/x86_64-linux-gnu/libc.so.6+0x29d8f)
+    #3 0x7f74e3029e3f in __libc_start_main (/lib/x86_64-linux-gnu/
+    libc.so.6+0x29e3f)
+    #4 0x559799ab4504 in _start (/home/user/clang-sanitizers/build/a.
+out+0x2504)
+
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV (/lib/x86_64-linux-gnu/libstdc++.
+so.6+0x14f4c4) in std::basic_ostream<char, std::char_traits<char> >&
+std::operator<< <char, std::char_traits<char>, std::allocator<char>
+>(std::basic_ostream<char, std::char_traits<char> >&, std::__
+cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>
+> const&)
+==4104819==ABORTING
+\end{shell}
+
+此示例强调了了解 C++ 中的对象生命周期的重要性，以及误用会导致未定义行为的原因。
+虽然编译器警告对于在编译时捕获此类问题很有用，但 ASan 等工具提供了额外的运行时错误检测层，这在编译时分析可能不够用的复杂场景中尤其有用。
+
+\mySamllsectionNoContent{Use-after-return检测}
+
+C++ 中的 use-after-scope 概念涉及在变量的作用域结束后访问该变量，从而导致未定义的行为。这种类型的错误很微妙，检测和调试起来特别困难。 ASan 提供了一项检测 use-after-scope 错误的功能，可以使用 -fsanitize-address-use-after-scope 编译标志启用该功能。
+
+\mySamllsectionNoContent{理解use-after-scope}
+
+范围外使用是指程序继续使用超出范围的变量的指针或引用。与返回后使用（问题出在函数局部变量）不同，范围外使用可以发生在任何范围内，例如代码块内（例如 if 语句或循环）。
+
+当变量超出范围时，其内存位置可能仍会保留旧数据一段时间，但此内存随时可能被覆盖。访问此内存是未定义的行为，可能会导致程序行为不稳定或崩溃。
+
+\mySamllsectionNoContent{配置 ASan 以进行使用后检测}
+
+编译标志： -fsanitize-address-use-after-scope：
+
+\begin{itemize}
+\item
+将此标志添加到编译命令中，指示 ASan 对代码进行检测以检测使用范围后错误
+
+\item
+需要注意的是，此检测默认不启用，必须明确启用
+\end{itemize}
+
+\mySamllsectionNoContent{演示 use-after-scope 的示例代码}
+
+提供的代码片段演示了 C++ 中"使用范围外错误"的经典案例。让我们分析一下代码并了解问题：
+
+\begin{cpp}
+int* create_array(bool condition) {
+    int *p;
+    if (condition) {
+        int x[10];
+        p = x;
+    }
+    *p = 1;
+}
+\end{cpp}
+
+在给定的代码片段中，我们首先声明一个 p 指针，但不对其进行初始化。然后，函数进入一个条件作用域，如果条件为真，则在堆栈上创建一个 x[10] 数组。在此作用域内，将 p 指针分配为指向此数组的开头，从而有效地使 p 指向 x。
+
+关键问题出现在退出条件块之后。此时，作为 if 块的本地变量， x 数组超出范围并且不再有效。但是， p 指针仍然保存着 x 所在位置的地址。当代码尝试使用 *p = 1; 写入此内存位置时，它试图访问现在超出范围的 x 数组的内存。此操作会导致使用范围外错误，其中 p 被取消引用以访问当前范围内不再有效的内存。这种错误是使用范围外的典型示例，突显了通过指向范围外变量的指针访问内存的危险。
+
+通过指向超出范围的变量的指针访问内存（如提供的代码片段所示）会导致未定义的行为。这是因为一旦 x 变量超出范围， p 指向的内存位置就会变得不确定。这种情况导致的未定义行为是有问题的，原因有几个。
+
+首先，它对程序的安全性和稳定性构成了重大风险。行为的未定义性质意味着程序可能会崩溃或行为不可预测。程序的这种不稳定性执行可能会产生深远的影响，特别是在可靠性至关重要的应用程序中。此外，如果 x 之前占用的内存位置被程序的其他部分覆盖，则可能会导致安全漏洞。这些漏洞可能会被利用来危害程序或运行它的系统。
+
+总之，通过指向超出范围的变量的指针访问内存所导致的未定义行为是软件开发中的一个严重问题，需要仔细管理变量范围和内存访问模式，以确保程序的安全性和稳定性。
+
+要使用启用了 ASan 的作用域后使用检测功能来编译程序，您可以使用以下命令：
+
+\begin{shell}
+g++ -fsanitize=address -fsanitize-address-use-after-scope -g your_file.cpp -o your_program
+\end{shell}
+
+使用这些设置运行已编译的程序可使 ASan 在运行时检测并报告使用后范围错误。
+
+由于使用范围外错误依赖于程序的运行时状态和内存布局，因此它们可能非常隐蔽且难以追踪。通过在 ASan 中启用使用范围外检测，开发人员可以获得一个有价值的工具来识别这些错误，从而开发出更强大、更可靠的 C++ 应用程序。了解和预防此类问题对于编写安全、正确的 C++ 代码至关重要。
+
+\mySamllsectionNoContent{ASan 中的双重释放和无效释放检查}
+
+ASan 是 LLVM 项目的一部分，它提供了强大的机制来检测和诊断 C++ 程序中的两种关键内存错误：双重释放和无效释放。这些错误不仅在复杂的 C++ 应用程序中很常见，还可能导致程序崩溃、未定义行为和安全漏洞等严重问题。
+
+\mySamllsectionNoContent{了解双重释放和无效释放}
+
+了解双重释放和无效释放错误对于有效管理 C++ 程序中的内存至关重要。
+
+当尝试使用 delete 或 delete[] 运算符多次释放内存块时，就会发生双重释放错误。这通常发生在将相同的内存分配传递给 delete 或 delete[] 两次时。第一次调用 delete 会释放内存，但第二次调用会尝试释放已释放的内存。这可能会导致堆损坏，因为程序随后可能会修改或重新分配已释放的内存用于其他用途。双重释放错误可能会导致程序出现不可预测的行为，包括崩溃和数据损坏。
+
+另一方面，当对未使用 new 或 new[] 分配的指针或已释放的指针使用 delete 或 delete[] 时，会发生无效释放错误。此类别包括尝试释放空指针、指向堆栈内存的指针（未动态分配） 或指向未初始化内存的指针。与双重释放错误一样，无效释放也会导致堆损坏和不可预测的程序行为。它们特别阴险，因为它们会破坏 C++ 运行时的内存管理结构，从而导致难以诊断的细微错误。
+
+这两个错误都源于对动态内存的不当处理，强调了遵守内存管理最佳实践的重要性，例如确保每个新增内容都有相应的删除，并避免在释放指针后重新使用它们。
+
+此列表概述了 ASan 检测机制的特点：
+
+\begin{itemize}
+\item
+堆损坏检测： ASan 会检测程序以跟踪所有堆分配和释放。执行删除操作时， ASan 会检查指针是否对应于有效的、先前分配的且尚未释放的内存块。
+
+\item
+错误报告：如果检测到重复释放或无效释放错误， ASan 将中止程序的执行并提供详细的错误报告。此报告包括代码中发生错误的位置、涉及的内存地址以及该内存的分配历史记录（如果有）。
+\end{itemize}
+
+下面是一些演示双重释放错误的示例代码：
+
+\begin{cpp}
+int main() {
+    int* ptr = new int(10);
+    delete ptr;
+    delete ptr; // Double-free error
+    return 0;
+}
+\end{cpp}
+
+ASan 将报告以下错误：
+
+\begin{shell}
+make && ./a.out
+Consolidate compiler generated dependencies of target a.out
+[ 50%] Building CXX object CMakeFiles/a.out.dir/main.cpp.o
+[100%] Linking CXX executable a.out
+[100%] Built target a.out
+=================================================================
+==765374==ERROR: AddressSanitizer: attempting double-free on
+0x602000000010 in thread T0:
+    #0 0x7f7ff5eb724f in operator delete(void*, unsigned long) ../../../../src/libsanitizer/asan/asan_new_delete.cpp:172
+    #1 0x55839eca830b in main /home/user/clang-sanitizers/main.cpp:6
+    #2 0x7f7ff5629d8f (/lib/x86_64-linux-gnu/libc.so.6+0x29d8f)
+    #3 0x7f7ff5629e3f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x29e3f)
+    #4 0x55839eca81c4 in _start (/home/user/clang-sanitizers/build/a.out+0x11c4)
+0x602000000010 is located 0 bytes inside of 4-byte region [0x602000000010,0x602000000014) freed by thread T0 here: #0 0x7f7ff5eb724f in operator delete(void*, unsigned long) ../../../../src/libsanitizer/asan/asan_new_delete.cpp:172
+    #1 0x55839eca82f5 in main /home/user/clang-sanitizers/main.cpp:5
+    #2 0x7f7ff5629d8f (/lib/x86_64-linux-gnu/libc.so.6+0x29d8f)
+
+previously allocated by thread T0 here: #0 0x7f7ff5eb61e7 in operator new(unsigned long) ../../../../src/ libsanitizer/asan/asan_new_delete.cpp:99
+    #1 0x55839eca829e in main /home/user/clang-sanitizers/main.cpp:4
+    #2 0x7f7ff5629d8f (/lib/x86_64-linux-gnu/libc.so.6+0x29d8f)
+
+SUMMARY: AddressSanitizer: double-free ../../../../src/libsanitizer/asan/asan_new_delete.cpp:172 in operator delete(void*, unsigned long) ==765374==ABORTING
+\end{shell}
+
+在这个例子中， ptr 指向的同一块内存被释放了两次，导致了双重释放错误。
+
+\mySamllsectionNoContent{示例代码演示了无效的释放}
+
+提供的代码片段演示了无效释放错误，这是 C++ 编程中可能发生的一种内存管理错误。让我们剖析一下这个例子，以了解这个问题及其影响：
+
+\begin{shell}
+int main() {
+    int local_var = 42;
+    int* ptr = &local_var;
+    delete ptr; // Invalid free error
+    return 0;
+}
+\end{shell}
+
+在给定的代码段中，我们首先声明并初始化一个本地 int local\_var = 42; 变量。这将创建一个名为 local\_var 的堆栈分配整数变量。接下来，使用 int* ptr = \&local\_var; 进行指针赋值，其中 ptr 指针设置为指向 local\_var 的地址。这在指针和堆栈分配变量之间建立了链接。
+
+但是，后续操作 delete ptr; 会出现问题。此行代码尝试释放 ptr 指向的内存。这里的问题是 p tr 指向的是堆栈分配的变量 local\_var，而不是从堆中动态分配的内存。在 C++ 中， delete 运算符旨在专门用于已使用 new 分配的指针。由于 local\_var 未使用 new 分配（是堆栈分配的变量），因此在 ptr 上使用 delete 是无效的，并会导致未定义的行为。在非堆指针上误用 delete 运算符是一种常见错误，可能会导致 C++ 程序中出现严重的运行时错误。
+
+以下是一些现代编译器警告：
+
+\begin{itemize}
+\item
+现代 C++ 编译器通常在对未指向动态分配内存的指针使用 delete 时发出警告或错误，因为这是一个常见的错误来源。
+
+\item
+为了在不修改的情况下编译此代码并展示 ASan 捕获此类错误的能力，您可能需要抑制编译器警告。这可以通过在编译命令中添加 -Wno-free-nonheap-object 标志来实现。
+\end{itemize}
+
+\mySamllsectionNoContent{使用 ASan 进行编译以进行无无效检测}
+
+要使用 ASan 编译程序来检测无效的释放操作，请使用以下命令：
+
+\begin{shell}
+clang++ -fsanitize=address -Wno-free-nonheap-object -g your_file.cpp -o your_program
+\end{shell}
+
+此命令在启用 ASan 的情况下编译程序，并隐藏有关释放非堆对象的特定编译器警告。运行编译后的程序时， ASan 将检测并报告无效的释放操作：
+
+\begin{shell}
+=================================================================
+==900629==ERROR: AddressSanitizer: attempting free on address which
+was not malloc()-ed: 0x7fff390f21d0 in thread T0
+    #0 0x7f30b82b724f in operator delete(void*, unsigned long) ../../../../src/libsanitizer/asan/asan_new_delete.cpp:172
+    #1 0x563f21cd72c7 in main /home/user/clang-sanitizers/main.cpp:4
+    #2 0x7f30b7a29d8f (/lib/x86_64-linux-gnu/libc.so.6+0x29d8f)
+    #3 0x7f30b7a29e3f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x29e3f)
+    #4 0x563f21cd7124 in _start (/home/user/clang-sanitizers/build/a.out+0x1124)
+
+Address 0x7fff390f21d0 is located in stack of thread T0 at offset 32
+in frame
+#0 0x563f21cd71f8 in main /home/user/clang-sanitizers/main.cpp:1
+
+    This frame has 1 object(s):
+        [32, 36) 'local_var' (line 2) <== Memory access at offset 32 is
+inside this variable
+HINT: this may be a false positive if your program uses some custom
+stack unwind mechanism, swapcontext or vfork
+    (longjmp and C++ exceptions *are* supported)
+SUMMARY: AddressSanitizer: bad-free ../../../../src/libsanitizer/asan/asan_new_delete.cpp:172 in operator delete(void*, unsigned long)
+==900629==ABORTING
+\end{shell}
+
+如示例中所示，尝试删除指向非堆对象的指针是 C++ 中内存管理操作的滥用。此类做法可能会导致未定义的行为，并可能导致崩溃或其他不稳定的程序行为。 ASan 是检测此类错误的宝贵工具，对开发强大且无错误的 C++ 应用程序做出了重大贡献。
+
+\mySamllsectionNoContent{微调 ASan 以增强控制}
+
+虽然 ASan 是检测 C++ 程序中内存错误的强大工具，但在某些情况下，其行为需要进行微调。这种微调对于有效管理分析过程至关重要，尤其是在处理涉及外部库、遗留代码或特定代码模式的复杂项目时。
+
+\mySamllsectionNoContent{抑制来自外部库的警告}
+
+在许多项目中，使用外部库是一种常见做法。但是，这些您可能无法控制的库有时会包含内存问题。在运行 ASan 等工具时，外部库中的这些问题可能会被标记，从而导致诊断混乱，其中充斥着与您的项目代码不直接相关的警告。这可能会带来问题，因为它可能会掩盖您自己的代码库中需要注意的真正问题。
+
+为了缓解这种情况， ASan 提供了一个实用的功能，让您可以抑制来自这些外部库的警告。这种过滤无关警告的功能对于专注于修复您自己的代码库范围内的问题非常有用。此功能的实现通常涉及使用清理器特殊情况列表或在编译过程中指定某些链接器标志。这些机制提供了一种方法来告诉 ASan 忽略诊断中的某些路径或模式，从而有效减少来自外部来源的噪音，并有助于更有针对性和更高效的调试过程。
+
+\mySamllsectionNoContent{条件编译}
+
+在软件开发中，有些情况下您可能只想在使用 ASan 编译程序时包含特定的代码段。这种方法对于各种目的都非常有用，例如合并其他诊断或修改内存分配，使其与 ASan 的操作更兼容或更友好。
+
+要实施此策略，您可以使用条件编译，这是一种根据特定条件包含或排除部分代码的技术。对于 ASan，您可以使用 \verb|__has_feature| 宏检查其是否存在。此宏在编译时评估特定功能（ 在本例中为 ASan）是否在当前编译上下文中可用。如果使用 ASan，则条件编译块内的代码将包含在最终可执行文件中；否则，它将被排除：
+
+\begin{cpp}
+#if defined(__has_feature)
+# if __has_feature(address_sanitizer)
+// Do something specific for AddressSanitizer
+# endif
+#endif
+\end{cpp}
+
+这种条件编译方法允许开发人员专门针对使用 ASan 的场景定制代码，从而提高清理程序的有效性，并可能避免仅在存在 ASan 的情况下才会出现的问题。它提供了一种根据构建配置调整程序行为的灵活方法，这在复杂的开发环境中非常有用，因为在开发、测试和生产阶段会使用不同的配置。
+
+\mySamllsectionNoContent{针对特定代码行禁用清理程序}
+
+在开发复杂软件的过程中，有些情况下，即使 ASan 可能将这些操作标记为错误，但这些操作也可能会被故意执行。或者，您可能出于特定原因希望将代码库中的某些部分排除在 ASan 分析之外。这可能是由于代码中某些已知的良性行为可能会被 ASan 误解为错误，或者 ASan 引入的某些代码开销不值得。
+
+为了解决这些情况， GCC 和 Clang 编译器都提供了一种选择性地禁用特定函数或代码块的ASan 的方法。这是通过使用 \verb|__attribute__ ((no_sanitize("address" )))| 属性来实现的。通过将此属性应用于函数或特定代码块，您可以指示编译器忽略该特定段的 ASan 检测。
+
+此功能特别有用，因为它允许精细控制代码的哪些部分需要接受 ASan 的审查。它使开发人员能够微调彻底的错误检测与代码行为或性能要求的实际情况之间的平衡。通过明智地应用此属性，您可以确保 ASan 的分析既有效又高效，将其精力集中在最有利的地方。
+
+\mySamllsectionNoContent{利用消毒剂特殊情况清单}
+
+\begin{itemize}
+\item
+源文件和函数（src 和 fun）： ASan 允许您抑制指定源文件或函数中的错误报告。当您想要忽略某些已知问题或第三方代码时，此功能特别有用。
+
+\item
+全局变量和类型（全局和类型）：此外， ASan 还引入了抑制对具有特定名称和类型的全局变量进行越界访问时的错误的功能。此功能对于全局变量和类/结构类型特别有用，可以更有针对性地抑制错误。
+\end{itemize}
+
+\mySamllsectionNoContent{消毒剂特殊案例列表条目示例}
+
+对 ASan 进行微调是将其集成到大型复杂开发环境中的一个重要方面。它允许开发人员自定义 ASan 的行为以满足项目的特定需求，无论是通过排除外部库、调整 ASan 构建的代码，还是忽略某些错误以专注于更关键的问题。通过有效利用这些微调功能，团队可以充分利用 ASan 的全部功能来确保 C++ 应用程序的稳健性和可靠性。可以在文本文件中设置抑制规则，如下所示：
+
+\begin{shell}
+fun:FunctionName # Suppresses errors from FunctionName
+global:GlobalVarName # Suppresses out-of-bound errors on GlobalVarName
+type:TypeName # Suppresses errors for TypeName objects
+\end{shell}
+
+然后可以通过 ASAN\_OPTIONS 环境变量将此文件传递给运行时，例如 \verb|ASAN_OPTIONS=suppressions=path/to/suppressionfile|。
+
+\mySamllsectionNoContent{ASan 的性能开销}
+
+使用 ASan 检测内存管理问题（例如无效释放操作）对于识别和解决 C++ 应用程序中的潜在错误非常有益。但是，重要的是要注意使用 ASan 对性能的影响。
+
+\mySamllsectionNoContent{性能影响、限制和建议}
+
+将 ASan 集成到开发和测试过程中会带来一定程度的性能开销。通常， ASan 带来的性能降低大约为 2 倍，这意味着使用 ASan 检测的程序的运行速度可能比未使用 ASan 检测的程序慢大约两倍。执行时间的增加主要是由于 ASan 执行了额外的检查和监控，以细致地检测内存错误。每次内存访问以及每次内存分配和释放操作都要经过这些检查，这不可避免地会导致消耗额外的 CPU 周期。
+
+鉴于这种性能影响， ASan 主要用于软件生命周期的开发和测试阶段。这种使用模式代表了一种权衡：虽然使用 ASan 会降低性能，但在开发过程的早期发现和修复关键内存相关错误的好处是显而易见的。及早发现这些问题有助于保持代码质量，并可大幅减少在周期后期调试和修复错误所需的时间和资源。
+
+但是，通常不建议在生产环境中部署 ASan 检测的二进制文件，尤其是在性能至关重要的情况下。 ASan 引入的开销会影响应用程序的响应能力和效率。 话虽如此，在某些情况下，特别是在可靠性和安全性至关重要而性能考虑次要的应用程序中，在类似生产的环境中使用 ASan 进行全面测试可能是合理的。 在这种情况下， ASan 提供的稳定性和安全性的额外保证可以抵消对性能下降的担忧。
+
+以下设备支持 ASan：
+
+\begin{itemize}
+\item
+Linux i386/x86\_64（在 Ubuntu 12.04 上测试）
+
+\item
+macOS 10.7 – 10.11（i386/x86\_64）
+
+\item
+iOS 模拟器
+
+\item
+Android ARM
+
+\item
+NetBSD i386/x86\_64
+
+\item
+FreeBSD i386/x86\_64（在 FreeBSD 11-current 上测试）
+
+\item
+Windows 8.1+（i386/x86\_64）
+\end{itemize}
+
+\mySubsubsection{11.1.2}{LeakSanitizer (LSan)}
+
+LSan 是一款专用的内存泄漏检测工具，是 ASan 套件的一部分，但也可以单独使用。它专门用于识别 C++ 程序中的内存泄漏 - 即分配的内存未释放，导致内存消耗随时间增加的情况。
+
+\mySamllsectionNoContent{与 ASan 集成}
+
+LSan 通常与 ASan 结合使用。当您在构建中启用 ASan 时， LSan 也会自动启用，从而为内存错误和泄漏提供全面的分析。
+
+\mySamllsectionNoContent{独立模式}
+
+如果您希望使用 LSan 而不使用 ASan，您可以通过使用 -fsanitize=leak 标志编译程序来启用它。当您只想专注于内存泄漏检测而不想考虑其他地址清理的开销时，这尤其有用。
+
+\mySamllsectionNoContent{内存泄漏检测示例}
+
+考虑以下存在内存泄漏的 C++ 代码：
+
+\begin{cpp}
+int main() {
+    int* leaky_memory = new int[100]; // Memory allocated and never
+    freed
+    leaky_memory = nullptr; // Memory leaked
+    (void)leaky_memory;
+    return 0;
+}
+\end{cpp}
+
+在此示例中，整数数组被动态分配且未释放，从而导致内存泄漏。
+
+当您使用 LSan 编译并运行此代码时，输出可能如下所示：
+
+\begin{shell}
+=================================================================
+==1743181==ERROR: LeakSanitizer: detected memory leaks
+
+Direct leak of 400 byte(s) in 1 object(s) allocated from:
+    #0 0x7fa14b6b6357 in operator new[](unsigned long) ../../../../src/libsanitizer/asan/asan_new_delete.cpp:102
+    #1 0x55888aabd19e in main /home/user/clang-sanitizers/main.cpp:2
+    #2 0x7fa14ae29d8f (/lib/x86_64-linux-gnu/libc.so.6+0x29d8f)
+
+SUMMARY: AddressSanitizer: 400 byte(s) leaked in 1 allocation(s).
+\end{shell}
+
+此输出可精确定位内存泄漏的位置和大小，有助于快速有效地调试。
+
+\mySamllsectionNoContent{平台支持}
+
+根据最新信息， LSan 支持 Linux、 macOS 和 Android。具体支持情况会根据所使用的工具链和编译器版本而有所不同。
+
+LSan 是 C++ 开发人员识别和解决其应用程序中的内存泄漏的宝贵工具。它既可以与 ASan 结合使用，也可以在独立模式下使用，为解决特定内存相关问题提供了灵活性。通过将 LSan 集成到开发和测试过程中，开发人员可以确保更高效的内存使用和整体提高应用程序稳定性。
+
+\mySubsubsection{11.1.3}{MemorySanitizer (MSan)}
+
+MSan 是一款动态分析工具，是 LLVM 项目的一部分，旨在检测 C++ 程序中未初始化内存的使用情况。未初始化内存的使用是导致不可预测行为、安全漏洞和难以诊断的错误的一个常见错误来源。
+
+要使用 MSan，请使用 -fsanitize=memory 标志编译程序。这会指示编译器检查代码中是否存在未初始化的内存使用情况。例如：
+
+\begin{shell}
+clang++ -fsanitize=memory -g -o your_program your_file.cpp
+\end{shell}
+
+\mySamllsectionNoContent{演示未初始化内存使用情况的示例代码}
+
+考虑以下简单的 C++ 示例：
+
+\begin{cpp}
+#include <iostream>
+
+int main() {
+    int* ptr = new int[10];
+    if (ptr[1]) {
+        std::cout << "xx\n";
+    }
+    delete[] ptr;
+    return 0;
+}
+\end{cpp}
+
+在这段代码中，整数是在堆中分配的，但没有初始化。
+
+使用 MSan 编译并运行时，输出可能如下所示：
+
+\begin{shell}
+==48607==WARNING: MemorySanitizer: use-of-uninitialized-value
+    #0 0x560a37e0f557 in main /home/user/clang-sanitizers/main.cpp:5:9
+    #1 0x7fa118029d8f (/lib/x86_64-linux-gnu/libc.so.6+0x29d8f)    (BuildId: c289da5071a3399de893d2af81d6a30c62646e1e)
+    #2 0x7fa118029e3f in __libc_start_main (/lib/x86_64-linux-gnu/    libc.so.6+0x29e3f) (BuildId: c289da5071a3399de893d2af81d6a30c62646e1e)
+    #3 0x560a37d87354 in _start (/home/user/clang-sanitizers/build/a.out+0x1e354) (BuildId: 5a727e2c09217ae0a9d72b8a7ec767ce03f4e6ce)
+
+SUMMARY: MemorySanitizer: use-of-uninitialized-value /home/user/clangsanitizers/main.cpp:5:9 in main
+\end{shell}
+
+MSan 检测未初始化变量的使用并指出代码中发生这种情况的确切位置。
+
+在这种情况下，修复可以像初始化数组一样简单：
+
+\begin{cpp}
+int* ptr = new int[10]{};
+\end{cpp}
+
+\mySamllsectionNoContent{微调、性能影响和限制}
+
+\begin{itemize}
+\item
+微调： MSan 的微调选项与 ASan 类似，用户可以参考官方文档了解详细的自定义选项。
+
+\item
+性能影响：通常，使用 MSan 会导致运行时速度减慢约 3 倍。此开销是由于 MSan 执行了额外的检查以检测未初始化内存的使用情况。
+
+\item
+支持的平台： MSan 支持 Linux、 NetBSD 和 FreeBSD。它能够有效地检测未初始化的内存使用情况，因此成为在这些平台上工作的开发人员的强大工具。
+
+\item
+局限性：与其他清理程序一样， MSan 的运行时开销使其更适合在测试环境中使用，而不是在生产环境中使用。此外， MSan 要求对整个程序（包括其使用的所有库）进行检测。在某些库的源代码不可用的情况下，这可能是一个限制。
+\end{itemize}
+
+MSan 是检测 C++ 程序中未初始化内存使用这一难以捉摸但可能至关重要的问题的重要工具。通过提供有关此类问题发生位置和方式的详细报告， MSan 使开发人员能够识别和修复这些错误，从而显著提高其应用程序的可靠性和安全性。尽管 MSan 会影响性能，但将其集成到开发和测试阶段是确保软件质量稳健的明智之举。
+
+\mySubsubsection{11.1.4}{TSan}
+
+在 C++ 编程领域，有效管理并发和多线程既重要又具有挑战性。线程相关问题（尤其是数据争用）非常难以检测和调试。与其他通常可以通过确定性测试方法（例如单元测试）发现的错误不同，线程问题本质上是难以捉摸且不确定的。它们可能不会在程序的每次运行中都表现出来，从而导致难以预测和不稳定的行为，而这些行为极难复制和诊断。
+
+\mySamllsectionNoContent{线程相关问题的复杂性}
+
+\begin{itemize}
+\item
+非确定性行为：并发问题（包括数据争用、死锁和线程泄漏）本质上是非确定性的。这意味着它们不会在相同条件下一致地重现，因此难以捉摸且难以预测。
+
+\item
+检测挑战：传统测试方法（包括综合单元测试）通常无法检测到这些问题。涉及并发的测试结果可能因执行时间、线程调度和系统负载等因素而有所不同。
+
+\item
+细微而严重的错误：与线程相关的错误可能一直处于潜伏状态，仅在特定条件下才会在生产中浮现，可能会导致严重的影响，例如数据损坏、性能下降和系统崩溃。
+\end{itemize}
+
+\mySamllsectionNoContent{TSan 的必要性}
+
+鉴于 C++ 中管理并发性所固有的挑战， Clang 和 GCC 提供的 TSan 等工具变得必不可少。 TSan 是一种精密的工具，旨在检测线程问题，特别关注数据竞争。
+
+\mySamllsectionNoContent{启用 TSan}
+
+\begin{itemize}
+\item
+如何启用 TSan：要启用 TSan，请使用 -fsanitize=thread 标志编译您的 C++ 代码。这将指示 Clang 和 GCC 对您的代码进行检测，以在运行时检测线程问题。
+
+\item
+编译示例：
+\begin{shell}
+clang++ -fsanitize=thread -g -o your_program your_file.cpp
+\end{shell}
+\end{itemize}
+
+该命令将编译启用了TSan的your\_file.cpp，以便检测和报告线程问题。注意，同时打开线程和asan是不可能的。
+
+\mySamllsectionNoContent{C++ 中的数据竞争示例}
+
+考虑这个简单但具有说明性的例子：
+
+\begin{cpp}
+#include <iostream>
+#include <thread>
+
+int shared_counter = 0;
+
+void increment_counter() {
+    for (int i = 0; i < 10000; ++i) {
+        shared_counter++; // Potential data race
+    }
+}
+
+int main() {
+    std::thread t1(increment_counter);
+    std::thread t2(increment_counter);
+    t1.join();
+    t2.join();
+    std::cout << "Shared counter: " << shared_counter << std::endl;
+    return 0;
+}
+\end{cpp}
+
+这里，两个线程在没有同步的情况下修改了同一个共享资源，导致了数据争用。
+
+如果我们在启用 TSan 的情况下构建并运行此代码，我们将获得以下输出：
+
+\begin{shell}
+==================
+WARNING: ThreadSanitizer: data race (pid=2560038)
+    Read of size 4 at 0x555fd304f154 by thread T2:
+    #0 increment_counter() /home/user/clang-sanitizers/main.cpp:8 (a.out+0x13f9)
+    #1 void std::__invoke_impl<void, void (*)()>(std::__invoke_other, void (*&&)()) /usr/include/c++/11/bits/invoke.h:61 (a.out+0x228a)
+    #2 std::__invoke_result<void (*)()>::type std::__invoke<void (*)()>(void (*&&)()) /usr/include/c++/11/bits/invoke.h:96 (a.out+0x21df)
+    #3 void std::thread::_Invoker<std::tuple<void (*)()> >::_M_invoke<0ul>(std::_Index_tuple<0ul>) /usr/include/c++/11/bits/std_thread.h:259 (a.out+0x2134)
+    #4 std::thread::_Invoker<std::tuple<void (*)()> >::operator()() /usr/include/c++/11/bits/std_thread.h:266 (a.out+0x20d6)
+    #5 std::thread::_State_impl<std::thread::_Invoker<std::tuple<void(*)()> > >::_M_run() /usr/include/c++/11/bits/std_thread.h:211(a.out+0x2088)
+    #6 <null> <null> (libstdc++.so.6+0xdc252)
+
+Previous write of size 4 at 0x555fd304f154 by thread T1:
+    #0 increment_counter() /home/user/clang-sanitizers/main.cpp:8 (a.out+0x1411)
+    #1 void std::__invoke_impl<void, void (*)()>(std::__invoke_other,  void (*&&)()) /usr/include/c++/11/bits/invoke.h:61 (a.out+0x228a)
+    #2 std::__invoke_result<void (*)()>::type std::__invoke<void (*)()>(void (*&&)()) /usr/include/c++/11/bits/invoke.h:96 (a.out+0x21df)
+    #3 void std::thread::_Invoker<std::tuple<void (*)()> >::_M_invoke<0ul>(std::_Index_tuple<0ul>) /usr/include/c++/11/bits/std_thread.h:259 (a.out+0x2134)
+    #4 std::thread::_Invoker<std::tuple<void (*)()> >::operator()() /    usr/include/c++/11/bits/std_thread.h:266 (a.out+0x20d6)
+    #5 std::thread::_State_impl<std::thread::_Invoker<std::tuple<void(*)()> > >::_M_run() /usr/include/c++/11/bits/std_thread.h:211 (a.out+0x2088)
+    #6 <null> <null> (libstdc++.so.6+0xdc252)
+
+Location is global 'shared_counter' of size 4 at 0x555fd304f154
+(a.out+0x000000005154)
+
+Thread T2 (tid=2560041, running) created by main thread at:
+    #0 pthread_create ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:969 (libtsan.so.0+0x605b8)
+    #1 std::thread::_M_start_thread(std::unique_ptr<std::thread::_State, std::default_delete<std::thread::_State> >, void (*)()) <null> (libstdc++.so.6+0xdc328)
+    #2 main /home/user/clang-sanitizers/main.cpp:14 (a.out+0x1484)
+
+Thread T1 (tid=2560040, finished) created by main thread at:
+    #0 pthread_create ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:969 (libtsan.so.0+0x605b8)
+    #1 std::thread::_M_start_thread(std::unique_ptr<std::thread::_State, std::default_delete<std::thread::_State> >, void (*)()) <null>
+    (libstdc++.so.6+0xdc328)
+    #2 main /home/user/clang-sanitizers/main.cpp:13 (a.out+0x146e)
+
+SUMMARY: ThreadSanitizer: data race /home/user/clang-sanitizers/main.
+cpp:8 in increment_counter()
+==================
+Shared counter: 20000
+ThreadSanitizer: reported 1 warnings
+\end{shell}
+
+TSan 的输出表明 C++ 程序中存在数据竞争情况。让我们分解一下这份报告的关键要素，以了解它告诉我们什么：
+
+\begin{itemize}
+\item
+错误类型：报告首先明确指出检测到了数据争用（警告： ThreadSanitizer：数据争用）。
+
+\item
+访问位置：
+
+报告指出，对同一位置存在两次相互冲突的内存访问（一次读取和一次之前的写入） ，两次访问均构成数据竞争。
+
+
+访问发生在 0x555fd304f154 内存地址，该地址被标识为全局 shared\_counter 变量。
+
+\item
+冲突访问的详细信息：
+
+\begin{itemize}
+\item
+线程 T2 的读访问：
+
+\begin{itemize}
+\item
+读取操作由线程 T2 执行，如报告所示。
+
+\item
+确定了发生此读取的确切代码行： increment\_counter() /home/user/clang-sanitizers/main.cpp:8。这意味着数据竞争读取发生在increment\_counter函数中，具体来说是在main.cpp的第8行。
+
+\item
+该报告还提供了此次读取之前的堆栈跟踪，显示了函数调用的序列。
+\end{itemize}
+
+\item
+线程 T1 的写访问：
+\begin{itemize}
+\item
+与读取访问类似，该报告详细说明了线程 T1 对同一全局变量。
+
+\item
+这次写入的位置也在 main.cpp 第 8 行的increment\_counter函数中。
+\end{itemize}
+\end{itemize}
+
+\item
+线程创建信息：
+
+该报告包含有关线程 T1 和 T2 在程序中创建位置的信息（分别位于 main.cpp 的第 13 行和第 14 行）。这有助于理解导致数据争用的程序流程。
+
+\item
+总结：
+
+摘要重申了问题的性质：摘要： ThreadSanitizer： increment\_counter() 中的数据竞争 /home/user/clang-sanitizers/main.cpp:8。这简明扼要地指出了检测到数据竞争的函数和文件。
+\end{itemize}
+
+\mySamllsectionNoContent{TSan 的微调、性能影响、限制和建议例}
+
+TSan 通常会导致运行时速度减慢约 5 到 15 倍。执行时间的显著增加是由于 TSan 执行了全面的检查以检测数据竞争和其他线程问题。除了速度减慢之外， TSan 还会增加内存使用量，通常约为 5 到 10 倍。这种开销来自 TSan 用于监控线程交互和识别潜在竞争条件的额外数据结构。
+
+此列表概述了 TSan 的局限性和当前状态：
+
+\begin{itemize}
+\item
+Beta 阶段： TSan 目前处于 Beta 阶段。虽然它在使用 pthreads 的大型 C++ 程序中很有效，但不能保证它在每种情况下都有效。
+
+\item
+支持的线程模型： TSan 使用 llvm 的 libc++ 编译时支持 C++11 线程。此兼容性包括 C ++11 标准引入的线程功能。
+\end{itemize}
+
+TSan 受多种操作系统和架构支持：
+
+\begin{itemize}
+\item
+Android: aarch64, x86\_64
+
+\item
+Darwin (macOS): arm64, x86\_64
+
+\item
+FreeBSD
+
+\item
+Linux: aarch64, x86\_64, powerpc64, powerpc64le
+
+\item
+NetBSD
+\end{itemize}
+
+支持主要集中在 64 位架构上。对 32 位平台的支持存在问题且没有计划。
+
+\mySamllsectionNoContent{微调 TSan}
+
+TSan 的微调与 ASan 非常相似。对详细微调选项感兴趣的用户可以参考官方文档，其中提供了有关如何定制 TSan 行为以满足特定需求和场景的全面指导。
+
+\mySamllsectionNoContent{使用 TSan 的建议}
+
+由于性能和内存开销， TSan 最适合在项目的开发和测试阶段使用。应根据性能要求仔细评估其在生产环境中的使用。 TSan 在具有大量多线程组件的项目中特别有用，因为这些项目中出现数据竞争和线程问题的可能性更高。将 TSan 纳入持续集成 (CI) 管道可以帮助在开发周期的早期发现线程问题，从而降低这些错误进入生产的风险。
+
+TSan 是开发人员处理 C++ 中并发复杂性的关键工具。它提供了一项宝贵的服务，可以检测传统测试方法经常忽略的难以捉摸的线程问题。通过将 TSan 集成到开发和测试过程中，开发人员可以显著提高其多线程 C++ 应用程序的可靠性和稳定性。
+
+\mySubsubsection{11.1.5}{UBSan}
+
+UBSan 是一种动态分析工具，旨在检测 C++ 程序中的未定义行为。 C++ 标准定义的未定义行为是指行为未规定的代码，从而导致程序执行不可预测。这可能包括整数溢出、除以零或误用空指针等问题。未定义行为可能导致程序行为不稳定、崩溃和安全漏洞。但是，编译器开发人员经常使用它来优化代码。 U BSan 对于识别这些问题至关重要，这些问题通常很微妙，很难通过标准测试检测到，但可能导致软件可靠性和安全性出现严重问题。
+
+\mySamllsectionNoContent{配置 UBSan}
+
+要使用 UBSan，请使用 -fsanitize=undefined 标志编译程序。这将指示编译器检查代码是否存在各种形式的未定义行为。这些命令使用 Clang 或 GCC 编译启用 UBSan 的程序。
+
+\mySamllsectionNoContent{演示未定义行为的示例代码}
+
+考虑这个简单的例子：
+
+\begin{cpp}
+#include <iostream>
+int main() {
+    int x = 0;
+    std::cout << 10 / x << std::endl; // Division by zero, undefined behavior
+    return 0;
+}
+\end{cpp}
+
+在这段代码中，试图除以0 （10 / x）是一个未定义行为的实例。
+
+当用UBSan编译和运行时，输出可能包括如下内容：
+
+\begin{shell}
+/home/user/clang-sanitizers/main.cpp:5:21: runtime error: division by
+zero
+SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior /home/user/
+clang-sanitizers/main.cpp:5:21 in
+0
+\end{shell}
+
+UBSan 检测除以零的情况并报告代码中发生此情况的确切位置。
+
+\mySamllsectionNoContent{微调、性能影响和限制}
+
+\begin{itemize}
+\item
+微调： UBSan 提供了各种选项来控制其行为，让开发人员可以专注于特定类型的未定义行为。对详细自定义感兴趣的用户可以参考官方文档。
+
+\item
+性能影响：与 ASan 和 TSan 等工具相比， UBSan 对运行时性能的影响通常较小，但具体影响取决于启用的检查类型。典型的性能下降通常很小。
+
+\item
+支持的平台： UBSan 支持 Linux、 macOS 和 Windows 等主要平台，可供 C++ 开发人员广泛使用。
+
+\item
+局限性：虽然 UBSan 在检测未定义行为方面功能强大，但它无法捕获所有实例，尤其是那些高度依赖于特定程序状态或硬件配置的实例。
+\end{itemize}
+
+\mySamllsectionNoContent{使用 TSan 的建议}
+
+
+

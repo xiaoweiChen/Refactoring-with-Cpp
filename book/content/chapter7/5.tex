@@ -1,0 +1,475 @@
+
+在金融软件领域，以灵活、类型安全且高效的方式处理各种类型的资产和货币至关重要。 C ++ 模板提供了一种强大的机制来实现这种灵活性，它允许开发人员编写可以处理任何数据类型的通用且可重复使用的代码。
+
+想象一下开发一个金融系统，该系统必须处理多种货币(例如美元和欧元)，并管理各种资产(例如股票或债券)。通过使用模板，我们可以定义对这些类型进行通用操作的类，而无需为每种特定货币或资产类型重复代码。这种方法不仅可以减少冗余，还可以增强系统的可扩展性和可维护性。
+
+在以下部分中，我们将详细了解使用 C++ 模板实现的金融系统示例。此示例将向您展示如何定义和操纵不同货币的价格、如何创建和管理资产以及如何确保操作保持类型安全和高效。通过此示例，我们旨在说明在实际 C++ 应用程序中使用模板的实际好处，以及它们如何带来更简洁、更易于维护和更强大的代码。
+
+\mySubsubsection{7.5.1}{定义货币}
+
+在设计金融系统时，必须以一种能够防止错误并确保类型安全的方式处理多种货币。让我们首先定义需求并探索各种设计选项。
+
+以下是要求：
+
+\begin{itemize}
+\item
+类型安全：确保不同的货币不会被无意混合
+
+\item
+可扩展性：轻松添加新货币，无需大量代码重复
+
+\item
+灵活性：以类型安全的方式支持价格的加减等各种运算
+\end{itemize}
+
+以下是设计选项：
+
+\begin{itemize}
+\item
+使用原始类型(int、 double)：一种方法是使用原始类型(如 int 或 double)来表示货币。但是，这种方法存在很大的缺点。它允许意外混合不同的货币，从而导致计算错误：
+
+\begin{cpp}
+double usd = 100.0;
+double eur = 90.0;
+double total = usd + eur; // Incorrectly adds USD and EUR
+\end{cpp}
+
+这种方法容易出错，并且缺乏类型安全性。请注意，由于浮点运算的精度问题，通常不建议使用 double 表示货币值。
+
+\item
+从基础货币类继承：另一种方法是定义一个基础货币类并从中继承特定货币。虽然这种方法引入了一些结构，但它仍然允许混合不同的货币，并且需要付出巨大的努力来实现每种新货币：
+
+\begin{cpp}
+class Currency {
+public:
+    virtual std::string name() const = 0;
+    virtual ~Currency() = default;
+};
+
+class USD : public Currency {
+public:
+    std::string name() const override { return "USD"; }
+};
+
+class Euro : public Currency {
+public:
+    std::string name() const override { return "EUR"; }
+};
+
+// USD and Euro can still be mixed inadvertently
+\end{cpp}
+
+\item
+使用模板定义货币：最可靠的解决方案是使用模板定义货币。此方法通过防止在编译时混合不同的货币来确保类型安全。每种货币都定义为一个结构体，并使用模板实现操作：
+
+\begin{cpp}
+struct Usd {
+    static const std::string &name() {
+        static std::string name = "USD";
+        return name;
+    }
+};
+
+struct Euro {
+    static const std::string &name() {
+        static std::string name = "EUR";
+        return name;
+    }
+};
+
+template <typename Currency>
+class Price {
+public:
+    Price(int64_t amount) : _amount(amount) {}
+    int64_t count() const { return _amount; }
+
+private:
+    int64_t _amount;
+};
+
+template <typename Currency>
+std::ostream &operator<<(std::ostream &os, const Price<Currency> &price) {
+    os << price.count() << " " << Currency::name();
+    return os;
+}
+
+template <typename Currency>
+Price<Currency> operator+(const Price<Currency> &lhs, const
+Price<Currency> &rhs) {
+    return Price<Currency>(lhs.count() + rhs.count());
+}
+
+template <typename Currency>
+Price<Currency> operator-(const Price<Currency> &lhs, const
+Price<Currency> &rhs) {
+    return Price<Currency>(lhs.count() - rhs.count());
+}
+// User can define other arithmetic operations as needed
+\end{cpp}
+
+这种基于模板的方法可确保不同货币的价格不会混合：
+
+\begin{cpp}
+int main() {
+    Price<Usd> usd(100);
+    Price<Euro> euro(90);
+    // The following line would cause a compile-time error
+    // source>:113:27: error: no match for 'operator+' (operand types are 'Price<Usd>' and 'Price<Euro>')
+    // Price<Usd> total= usd + euro;
+    Price<Usd> total = usd+ Price<Usd>(50); // Correct usage
+    std::cout << total<< std::endl; // Outputs: 150 USD
+    return 0;
+}
+\end{cpp}
+
+\end{itemize}
+
+\mySubsubsection{7.5.2}{定义资产}
+
+接下来，我们定义可以用不同货币定价的资产。使用模板，我们可以确保每项资产都与正确的货币相关联：
+
+\begin{cpp}
+template <typename TickerT>
+class Asset;
+
+struct Apple {
+    static const std::string &name() {
+        static std::string name = "AAPL";
+        return name;
+    }
+
+    static const std::string &exchange() {
+        static std::string exchange = "NASDAQ";
+        return exchange;
+    }
+
+    using Asset = class Asset<Apple>;
+    using Currency = Usd;
+};
+
+struct Mercedes {
+    static const std::string &name() {
+        static std::string name = "MGB";
+        return name;
+    }
+
+    static const std::string &exchange() {
+        static std::string exchange = "FRA";
+        return exchange;
+    }
+
+    using Asset = class Asset<Mercedes>;
+    using Currency = Euro;
+};
+
+template <typename TickerT>
+class Asset {
+public:
+    using Ticker = TickerT;
+    using Currency = typename Ticker::Currency;
+
+    Asset(int64_t amount, Price<Currency> price)
+        : _amount(amount), _price(price) {}
+
+    auto amount() const { return _amount; }
+    auto price() const { return _price; }
+
+private:
+    int64_t _amount;
+    Price<Currency> _price;
+};
+
+template <typename TickerT>
+std::ostream &operator<<(std::ostream &os, const Asset<TickerT>
+&asset) {
+    os << TickerT::name() << ", amount: " << asset.amount() << ", price: " << asset.price();
+    return os;
+}
+\end{cpp}
+
+\mySubsubsection{7.5.3}{使用财务系统}
+
+最后，我们演示如何使用定义的模板来管理资产和价格：
+
+\begin{cpp}
+int main() {
+    Price<Usd> usd_price(100);
+    usd_price = usd_price + Price<Usd>(1);
+    std::cout << usd_price << std::endl; // Outputs: 101 USD
+
+    Asset<Apple> apple{10, Price<Usd>(100)};
+    Asset<Mercedes> mercedes{5, Price<Euro>(100)};
+
+    std::cout << apple << std::endl; // Outputs: AAPL, amount: 10, price: 100 USD
+    std::cout << mercedes << std::endl; // Outputs: MGB, amount: 5, price: 100 EUR
+
+    return 0;
+}
+\end{cpp}
+
+\mySubsubsection{7.5.4}{系统设计中使用模板的缺点}
+
+虽然 C++ 中的模板提供了一种强大而灵活的方法来创建类型安全的通用组件，但这种方法也存在一些缺点。这些缺点在处理多种货币和资产的金融系统中尤其重要。在决定在设计中使用模板时，了解这些潜在的缺点至关重要。
+
+\mySamllsectionNoContent{代码膨胀}
+
+模板可能会导致代码膨胀，即由于生成多个模板实例而导致的二进制文件大小增加。编译器会为每个唯一类型实例生成一个单独的模板代码版本。在支持多种货币和资产的金融系统中，这可能会导致编译后的二进制文件大小显著增加。
+
+例如，如果我们有使用不同类型(如 Usd、 Euro、 Apple 和 Mercedes)实例化的 Price 和 As set 模板，则编译器会为每种组合生成单独的代码：
+
+\begin{cpp}
+Price<Usd> usdPrice(100);
+Price<Euro> euroPrice(90);
+Asset<Apple> appleAsset(10, Price<Usd>(100));
+Asset<Mercedes> mercedesAsset(5, Price<Euro>(100));
+\end{cpp}
+
+每次实例化都会产生额外的代码，从而增加整体二进制大小。随着支持的货币和资产数量的增加，代码膨胀的影响变得更加明显。二进制大小会影响应用程序性能、内存使用量和加载时间，尤其是在资源受限的环境中，这主要是由于缓存效率较低。
+
+\mySamllsectionNoContent{增加编译时间}
+
+模板可以显著增加项目的编译时间。每次实例化具有新类型的模板都会导致编译器生成新代码。在支持来自不同国家和证券交易所的数百种货币和资产的金融系统中，编译器必须实例化所有所需的组合，从而延长构建时间。
+
+例如，假设我们的系统支持以下内容：
+
+\begin{itemize}
+\item
+50 种不同的货币
+
+\item
+来自不同证券交易所的 10000 种不同资产类型
+\end{itemize}
+
+然后，编译器需要为每个价格和资产组合生成代码，从而产生大量的模板实例。这会大大减慢编译过程，影响开发工作流程，并降低反馈循环的效率。
+
+\mySamllsectionNoContent{与其余代码的交互不太明显}
+
+模板代码可能比较复杂，而且在与其他代码库的交互方面不太明显。对模板经验不足的开发人员可能会发现，理解和维护模板繁重的代码很困难。语法可能很冗长，编译器错误消息可能难以解读，这使得调试和故障排除更加复杂。
+
+例如，模板参数中的一个简单错误可能会导致令人困惑的错误消息：
+
+\begin{cpp}
+template <typename T>
+class Price {
+    // Implementation
+};
+
+Price<int> price(100); // Intended to be Price<Usd> but mistakenly used int
+\end{cpp}
+
+在这种情况下，开发人员必须了解模板和编译器生成的特定错误消息才能解决问题。这对于经验不足的开发人员来说可能是一个障碍。
+
+C++20 提供了改进模板错误消息和约束的概念，这有助于使模板代码更具可读性和更易于理解。我们可以创建一个名为 BaseCurrency 的基类，并从中派生所有货币类。这样，我们可以确保所有货币类都有一个通用接口，并且可以互换使用：
+
+\begin{cpp}
+struct BaseCurrency {
+};
+
+struct Usd : public BaseCurrency {
+    static const std::string &name() {
+        static std::string name = "USD";
+        return name;
+    }
+};
+
+// Define a concept for currency classes
+template<class T, class U>
+concept Derived = std::is_base_of<U, T>::value;
+
+// Make sure that template parameter is derived from BaseCurrency
+template <Derived<BaseCurrency> CurrencyT>
+class Price {
+public:
+    Price(int64_t amount) : _amount(amount) {}
+    int64_t count() const { return _amount; }
+
+private:
+    int64_t _amount;
+};
+\end{cpp}
+
+经过这些更改后，尝试实例化 Price<int> 将导致编译时错误，这清楚地表明该类型必须从 B aseCurrency 派生：
+
+\begin{shell}
+In function 'int main()':
+error: template constraint failure for 'template<class
+CurrencyT> requires Derived<CurrencyT, Currency> class Price'
+auto p = Price<int>(100);
+                  ^
+note: constraints not satisfied
+In substitution of 'template<class
+CurrencyT> requires Derived<CurrencyT, Currency> class Price [with
+CurrencyT = int]':
+\end{shell}
+
+C++20 之前的 C++ 版本还提供了一种防止意外模板实例化的方法，即使用 std::enable\_if 和std::is\_base\_of 的组合来对模板参数实施约束：
+
+\begin{cpp}
+template <typename CurrencyT,
+          typename Unused=typename std::enable_if<std::is_base_
+of<BaseCurrency,CurrencyT>::value>::type>
+class Price {
+public:
+    Price(int64_t amount) : _amount(amount) {}
+    int64_t count() const { return _amount; }
+
+private:
+    int64_t _amount;
+};
+\end{cpp}
+
+尝试初始化 Price<int> 现在将导致编译时错误，表明该类型必须从 BaseCurrency 派生，但是，错误消息会有点神秘：
+
+\begin{shell}
+error: no type named 'type' in 'struct std::enable_if<false, void>'
+auto p = Price<int>(100);
+     |              ^
+error: template argument 2 is invalid
+\end{shell}
+
+
+\mySamllsectionNoContent{有限的工具支持和调试}
+
+由于工具支持有限，调试模板代码可能具有挑战性。许多调试器不能很好地处理模板实例，这使得很难逐步执行模板代码并检查模板参数和实例。这可能会阻碍调试过程，并使识别和修复问题变得更加困难。
+
+例如，在调试器中检查模板化的 Price<Usd> 对象的状态可能无法提供对底层类型和值的清晰见解，尤其是在调试器不完全支持模板参数检查的情况下。
+
+大多数自动完成和 IDE 工具都无法很好地处理模板，因为它们无法假设模板参数的类型。
+这会使导航和理解模板繁重的代码库变得更加困难。
+
+\mySamllsectionNoContent{模板的高级功能可能难以使用}
+
+C++ 中的模板提供了一种编写通用且可重用代码的机制。但是，在某些情况下，需要针对特定类型自定义默认模板行为。这就是模板特化发挥作用的地方。模板特化允许您为特定类型定义特殊行为，确保模板对该类型正确运行。
+
+\mySamllsectionNoContent{为什么要使用模板特化？}
+
+当通用模板实现无法正确或高效地用于特定类型，或者特定类型需要完全不同的实现时，就会使用模板特化。这种情况可能由于多种原因而发生，例如性能优化、对某些数据类型的特殊处理或符合特定要求。
+
+例如，假设您有一个通用的 Printer 模板类，可以打印任何类型的对象。但是，对于 std::stri ng，您可能需要在打印字符串时为其添加引号。
+
+\mySamllsectionNoContent{基本模板特化示例}
+
+以下是模板特化如何工作的示例：
+
+\begin{cpp}
+#include <iostream>
+#include <string>
+
+// General template
+template <typename T>
+class Printer {
+    public:
+    void print(const T& value) {
+        std::cout << value << std::endl;
+    }
+};
+
+// Template specialization for std::string
+template <>
+class Printer<std::string> {
+    public:
+    void print(const std::string& value) {
+        std::cout << "\"" << value << "\"" << std::endl;
+    }
+};
+
+int main() {
+    Printer<int> int_printer;
+    int_printer.print(123); // Outputs: 123
+
+    Printer<std::string> string_printer;
+    string_printer.print("Hello, World!"); // Outputs: "Hello, World!" with quotes
+
+    return 0;
+}
+\end{cpp}
+
+在此示例中，通用 Printer 模板类可打印任何类型。但是，对于 std::string，专用版本在打印字符串时会为其添加引号。
+
+\mySamllsectionNoContent{包括专业化标题}
+
+使用模板特化时，包含特化定义所在的头文件至关重要。如果不包含特化头文件，编译器将实例化模板的默认版本，从而导致错误行为。
+
+例如，考虑以下文件：
+
+Printer.h(通用模板定义)：
+
+\begin{cpp}
+#ifndef PRINTER_H
+#define PRINTER_H
+
+#include <iostream>
+
+template <typename T>
+class Printer {
+    public:
+    void print(const T& value) {
+        std::cout << value << std::endl;
+    }
+};
+
+#endif // PRINTER_H
+\end{cpp}
+
+Printer\_string.h(std::string 的模板特化)：
+
+\begin{cpp}
+#ifndef PRINTER_STRING_H
+#define PRINTER_STRING_H
+
+#include "printer.h"
+#include <string>
+
+template <>
+class Printer<std::string> {
+    public:
+    void print(const std::string& value) {
+        std::cout << "\"" << value << "\"" << std::endl;
+    }
+};
+
+#endif // PRINTER_STRING_H
+\end{cpp}
+
+main.cpp(使用模板和专业化)：
+
+\begin{cpp}
+#include "printer.h"
+// #include "printer_string.h" // Uncomment this line to use the specialization
+
+int main() {
+    Printer<int> int_printer;
+    int_printer.print(123); // Outputs: 123
+
+    Printer<std::string> string_printer;
+    string_printer.print("Hello, World!"); // Outputs: Hello, World! without quotes if the header is not included
+
+    return 0;
+}
+\end{cpp}
+
+在此设置中，如果 main.cpp 中未包含 Printer\_string.h 标头，则编译器将使用 std::string 的默认 Printer 模板，从而导致不正确的行为(打印不带引号的字符串)。
+
+模板是 C++ 编程语言的重要组成部分，提供强大的功能来创建通用、可重用且类型安全的代码。它们在各种场景中都不可或缺，例如开发通用算法、容器类、智能指针和其他需要与多种数据类型无缝协作的实用程序。模板使开发人员能够编写灵活高效的代码，确保相同的功能可以应用于不同的类型而不会重复。
+
+然而，模板的强大功能并非没有代价。使用模板会导致编译时间增加和代码膨胀，尤其是在支持多种类型和组合的系统中。语法和产生的错误消息可能很复杂且难以理解，这对经验不足的开发人员来说是一个挑战。此外，由于工具支持有限以及模板实例的复杂性，调试模板繁重的代码可能会很麻烦。
+
+此外，模板可能会与代码库的其余部分产生不太明显的交互，如果管理不当，可能会导致问题。开发人员还必须了解模板特化等高级功能，这些功能需要谨慎包含特化标头，以避免出现错误行为。
+
+鉴于这些注意事项，开发人员在将模板纳入项目之前必须仔细考虑。虽然它们提供了显著的好处，但潜在的缺点需要采取深思熟虑的方法来确保优势大于复杂性。正确理解和明智使用模板可以带来更强大、更可维护和更高效的 C++ 应用程序。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

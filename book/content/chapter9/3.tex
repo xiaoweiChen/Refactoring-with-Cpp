@@ -1,0 +1,153 @@
+
+
+在配置 Clang-Format 时，可能性几乎是无穷无尽的，您可以调整代码外观的哪怕最细微的细节。但是，对于刚接触此工具或希望快速采用一套广泛接受的规则的人来说， Clang-Format 允许您从现有预设中派生配置。这些预设是坚实的基础，您可以在此基础上构建适合您项目特定需求的定制格式样式。
+
+\mySubsubsection{9.3.1}{利用现有预设}
+
+Clang-Format 提供了几个符合流行编码标准的内置预设。其中包括：
+
+\begin{itemize}
+\item
+LLVM：遵守 LLVM 编码标准
+
+\item
+Google：遵循 Google 的 C++ 风格指南
+
+\item
+Chromium：基于 Chromium 的样式指南，这是 Google 样式指南的变体
+
+\item
+Mozilla：遵循 Mozilla 编码标准
+
+\item
+WebKit：遵循 WebKit 编码标准
+\end{itemize}
+
+要使用其中一个预设，只需在 .clang-format 配置文件中设置 BasedOnStyle 选项，如下所示：
+
+\begin{shell}
+BasedOnStyle: Google
+\end{shell}
+
+这会告诉 Clang-Format 应用 Google C++ 样式指南作为基础，然后应用您指定的任何其他自定义。
+
+\mySubsubsection{9.3.2}{扩展和覆盖预设}
+
+选择与团队编码理念最相符的预设后，您可以开始自定义特定规则。 .clang-format 文件允许您通过在 BasedOnStyle 选项下列出预设规则来覆盖或扩展预设规则。例如，扩展的 .clang-format 示例可以演示如何微调代码格式的各个方面。以下是一个示例配置文件，它以 Google 的样式为基础，然后自定义几个特定方面，例如缩进宽度、括号换行和连续赋值的对齐方式：
+
+\begin{shell}
+---
+BasedOnStyle: Google
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# Braces
+BreakBeforeBraces: Custom
+BraceWrapping:
+    AfterClass: true
+    AfterControlStatement: false
+    AfterEnum: true
+    AfterFunction: true
+    AfterNamespace: true
+    AfterStruct: true
+    AfterUnion: true
+    BeforeCatch: false
+    BeforeElse: false
+
+# Alignment
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignOperands: true
+AlignTrailingComments: true
+
+# Spaces and empty lines
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInCStyleCastParentheses: false
+SpacesInContainerLiterals: true
+SpacesInSquareBrackets: false
+MaxEmptyLinesToKeep: 2
+
+# Column limit
+ColumnLimit: 80
+\end{shell}
+
+让我们仔细看看这里选择的选项：
+
+\begin{enumerate}
+\item
+IndentWidth 和 TabWidth：分别设置缩进和制表符的空格数。其中， UseTab: Never 指定不使用制表符进行缩进。
+
+\item
+BreakBeforeBraces 和 BraceWrapping：这些选项自定义在各种情况下(例如类、函数和命名空间)在打开括号之前何时中断。
+
+\item
+AlignAfterOpenBracket 、 AlignConsecutiveAssignments 等：这些控制各种代码元素(例如开括号和连续赋值)的对齐方式。
+
+\item
+SpaceBeforeParens、 SpaceInEmptyParentheses 等：这些管理不同场景中的空格，例如控制语句中括号前或空括号内。
+
+\item
+MaxEmptyLinesToKeep：此选项限制要保留的最大连续空行数。
+
+\item
+ColumnLimit：此选项设置每行的列数限制，以确保代码不超过指定的限制，从而增强可读性。
+\end{enumerate}
+
+.clang-format 文件应放在项目的根目录中并提交到版本控制系统，以便每个团队成员和 CI/CD 管道都可以使用相同的配置来实现一致的代码格式。
+
+\mySubsubsection{9.3.3}{使用 Clang-Format 忽略特定行}
+
+虽然 Clang-Format 是一款出色的工具，可用于在整个项目中保持一致的编码风格，但有时您可能希望保留某些行或代码块不变。幸运的是， Clang-Format 提供了从格式化中排除特定行或代码块的功能。这对于原始格式对于可读性至关重要的行或包含不应更改的生成代码的行特别有用。
+
+要忽略特定行或代码块，您可以使用特殊的注释标记。在要忽略的行或代码块前放置 \verb|// clang- format off|，然后在行或代码块后使用 \verb|// clang-format on| 以恢复正常格式。以下是示例：
+
+\begin{cpp}
+int main() {
+    // clang-format off
+    int variableNameNotFormatted=42;
+    // clang-format on
+
+    int properlyFormattedVariable = 43;
+}
+\end{cpp}
+
+在这个例子中， Clang-Format 不会触碰 \verb|int variableNameNotFormatted=42;|，但会将指定的格式规则应用于 \verb|int appropriateFormattedVariable = 43;|。
+
+此功能提供了对格式化过程的细粒度控制，使您可以将自动格式化的好处与特定编码情况可能需要的细微差别结合起来。您可以随意将其包含在您的章节中，以提供 Clang-Format 为代码样式管理提供的完整视图。
+
+\mySubsubsection{9.3.4}{无限的配置选项}
+
+由于 Clang-Format 基于 Clang 编译器的代码解析器，因此它可以提供最精确的源代码分析，因此配置选项也最丰富。完整的设置列表可以在官方页面上找到： \url{https://clang.llvm.org/docs/ClangFormatStyleOptions.html}。
+
+\mySubsubsection{9.3.5}{版本控制和共享}
+
+通常，将 .clang-format 文件包含在项目的版本控制系统中是一种很好的做法。这可确保团队的每个成员以及 CI/CD 系统都使用同一套格式规则，从而实现更加一致且易于维护的代码库。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

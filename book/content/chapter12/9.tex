@@ -1,0 +1,14 @@
+要运行测试， Google Test 需要一个主函数来初始化 Google Test 框架并运行所有测试。以下是示例：
+
+\begin{cpp}
+#include <gtest/gtest.h>
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+\end{cpp}
+
+此主函数初始化 Google Test，将命令行参数传递给它，从而允许从命令行控制测试执行。 RUN\_ALL\_TESTS() 运行已定义的所有测试，如果所有测试都通过，则返回 0，否则返回 1。
+
+通过遵循这些示例和说明，您可以开始使用 Google Test 为您的 C++ 项目编写全面的测试，确保您的代码在各种场景中都能按预期运行。

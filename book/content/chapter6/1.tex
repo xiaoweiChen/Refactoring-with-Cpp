@@ -1,0 +1,31 @@
+如何利用 C++ 的类型系统编写更强大的代码的最佳示例之一是 <chrono> 库。此标头在 C++ 11 中引入，提供了一组实用程序来表示时间持续时间和时间点，以及执行与时间相关的操作。
+
+使用纯整数或诸如 timespec 之类的结构来管理与时间相关的函数可能是一种容易出错的方法，尤其是在处理不同的时间单位时。想象一下一个函数，它接受一个表示以秒为单位的超时时间的整数：
+
+\begin{cpp}
+void wait_for_data(int timeout_seconds) {
+    sleep(timeout_seconds); // Sleeps for timeout_seconds seconds
+}
+\end{cpp}
+
+这种方法缺乏灵活性，并且在处理各种时间单位时会导致混乱。例如，如果调用者错误地传递了毫秒而不是秒，则可能导致意外行为。
+
+相比之下，使用<chrono>定义相同的函数使代码更加健壮和富有表现力：
+
+\begin{cpp}
+#include <chrono>
+#include <thread>
+void wait_for_data(std::chrono::seconds timeout) {
+    std::this_thread::sleep_for(timeout); // Sleeps for the specified timeout
+}
+\end{cpp}
+
+调用者现在可以使用强类型持续时间(例如 std::chrono::seconds(5))传递超时，并且编译器会确保使用正确的单位。此外， <chrono> 提供不同时间单位之间的无缝转换，允许调用者以秒、毫秒或任何其他单位指定超时，而不会产生歧义。以下代码片段说明了使用不同单位的用法：
+
+\begin{cpp}
+wait_for_data(std::chrono::milliseconds(150));
+\end{cpp}
+
+通过采用 <chrono> 提供的强类型，代码变得更清晰、更易于维护，并且不易受到与时间表示相关的常见错误的影响。
+
+

@@ -1,0 +1,105 @@
+现在我们已经成功配置了 Clang-Tidy 的规则并将该工具集成到我们的 CMake 构建系统中，是时候进行实际测试了。为此，我们将使用一段故意违反我们建立的命名约定的 C++ 代码片段：
+
+\begin{cpp}
+#include <string>
+#include <vector>
+
+namespace Filesystem { // CamelCase instead of lower_case
+
+enum class Permissions : uint8_t { READ, WRITE, execute };
+struct User {
+    std::string name_; // redundant suffix _ for public member
+    int Id = 0; // CamelCase instead of lower_case
+    Permissions permissions;
+};
+
+class file { // lower _ case instead of CamelCase
+public:
+    file(int id, const std::string &file_name,
+        const std::vector<User> access_list)
+        : id{id}, FileName_{file_name}, access_list_{access_list} {}
+
+    int GetId() const // CamelCase instead of lower_case
+    {
+        return id;
+    }
+
+    auto &getName() const // camelBack instead of lower_case
+    {
+        return FileName_;
+    }
+
+    const std::vector<User> &access_list() const { return access_list_ ; }
+    private:
+    int id; // missing suffix _
+    std::string FileName_; // CamelCase instead of lower_case
+    std::vector<User> access_list_;
+};
+
+} // namespace Filesystem
+
+int main() {
+    auto user = Filesystem::User{};
+    user.name _ = "user";
+    user.permissions = Filesystem::Permissions::execute;
+    auto file = Filesystem::file{0, "~/home/user/file", {user}};
+    return 0;
+}
+\end{cpp}
+
+当我们运行 make clang-tidy 时， Clang-Tidy 将立即采取行动，扫描有问题的代码并直接在终端输出中标记任何命名问题。为了节省空间，我在这里只提供了部分输出：
+
+\begin{shell}
+make check-clang-tidy
+[100%] Checking code quality with clang-tidy
+9 warnings generated.
+/home/user/clang-format-tidy/main.cpp:4:11: error: invalid case style
+for namespace 'Filesystem' [readability-identifier-naming,-warnings-aserrors]
+    4 | namespace Filesystem { // CamelCase instead of lower _ case
+      |           ^~~~~~~~~~
+      |           filesystem
+/home/user/clang-format-tidy/main.cpp:6:49: error: invalid case style for
+enum constant 'execute' [readability-identifier-naming,-warnings-aserrors]
+    6 | enum class Permissions : uint8 _ t { READ, WRITE, execute };
+      |                                                   ^~~~~~~
+      |                                                   EXECUTE
+/home/user/clang-format-tidy/main.cpp:9:17: error: invalid case style
+for public member 'name_' [readability-identifier-naming,-warnings-aserrors]
+    9 |     std::string name_; // redundant suffix _ for public member
+      |                 ^~~~~
+      |                 name
+/home/user/clang-format-tidy/main.cpp:10:9: error: invalid case style for
+public member 'Id' [readability-identifier-naming,-warnings-as-errors]
+   10 |     int Id = 0; // CamelCase instead of lower _ case
+      |         ^~
+      |         id
+/home/user/clang-format-tidy/main.cpp:14:7: error: invalid case style for
+class 'file' [readability-identifier-naming,-warnings-as-errors]
+   14 | class file { // lower _ case instead of CamelCase
+      |       ^~~~
+      |       File
+   15 | public:
+   16 |     file(int id, const std::string &file_name,
+      |     ~~~~
+      |     File
+/home/user/clang-format-tidy/main.cpp:20:9: error: invalid case style for
+function 'GetId' [readability-identifier-naming,-warnings-as-errors]
+   20 |     int GetId() const // CamelCase instead of lower_case
+      |         ^~~~~
+      |         get_id
+9 warnings treated as errors
+\end{shell}
+
+此练习展示了将 Clang-Tidy 集成到构建过程中的切实好处。它不仅可以识别代码中与既定命名约定的偏差，还可以提供立即纠正的机会。这是维护不仅功能齐全而且结构良好的代码库的重要一步。建议在 CI 管道中包含 make clang-tidy 命令。通过这样做，您可以自动验证对存储库所做的每个提交的命名约定和其他代码样式规则。这将有助于确保对代码库的任何新贡献都符合既定的准则。如果提交未通过 Clang-Tidy 检查， CI 管道可以将其标记为需要审查，从而更容易维护一致、高质量的代码库。这一额外的自动化层消除了手动检查这些问题的需要，从而简化了代码审查流程并提高了开发工作流程的效率。
+
+
+
+
+
+
+
+
+
+
+
+

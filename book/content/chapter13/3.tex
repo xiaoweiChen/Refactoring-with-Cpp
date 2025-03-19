@@ -1,0 +1,73 @@
+Conan 是一款功能强大的 C 和 C++ 软件包管理器，可简化集成第三方库以及跨各种平台和配置管理依赖项的过程。它以处理多个版本的库、复杂的依赖关系图和不同的构建配置的能力而脱颖而出，使其成为现代 C++ 开发的必备工具。
+
+\mySubsubsection{13.3.1}{Conan 配置和功能}
+
+Conan 的配置存储在 conanfile.txt 或 conanfile.py 中，开发人员可以在其中指定所需的库、版本、设置和选项。此文件充当项目依赖项的清单，可实现对项目中使用的库的精确控制。
+
+主要特点：
+
+\begin{itemize}
+\item
+多平台支持： Conan 设计用于 Windows、 Linux、 macOS 和 FreeBSD，可在不同的操作系统上提供一致的体验
+
+\item
+构建配置管理：开发人员可以指定编译器版本、架构和构建类型（调试、发布）等设置，以确保项目的兼容性和最佳构建
+
+\item
+版本处理： Conan 可以管理同一个库的多个版本，允许项目根据需要依赖特定版本
+
+\item
+依赖项解析：它自动解析并下载传递依赖项，确保构建过程中所需的所有库都可用
+\end{itemize}
+
+\mySubsubsection{13.3.2}{库位置和Conan Center}
+
+Conan 软件包的主要存储库是 Conan Center，这是一个广泛的开源 C 和 C++ 库集合。 Conan Center 是查找和下载软件包的首选地点，但开发人员也可以为其项目指定自定义或私有存储库。
+
+除了 Conan Center，公司和开发团队还可以托管自己的 Conan 服务器或使用 Artifactory 等服务来管理私有或专有包，从而实现组织内依赖关系管理的集中式方法。
+
+\mySubsubsection{13.3.3}{配置静态或动态链接}
+
+Conan 允许开发人员指定是否对库使用静态或动态链接。这通常通过 conanfile.txt 或 conanfil e.py 中的选项来完成。以下是示例：
+
+\begin{shell}
+[options]
+Poco:shared=True # Use dynamic linking for Poco
+Or in conanfile.py:
+class MyProject(ConanFile):
+    requires = "poco/1.10.1"
+    default_options = {"poco:shared": True}
+\end{shell}
+
+这些设置指示 Conan 下载并使用指定库的动态版本。同样，将选项设置为 False 将有利于静态库。必须注意的是，并非所有软件包都支持这两种链接选项，这取决于它们如何为 Conan 打包。
+
+\mySubsubsection{13.3.4}{使用自定义包扩展 Conan}
+
+Conan 的优势之一是其可扩展性。如果所需的库在 Conan Center 中不可用或不符合特定需求，开发人员可以创建并贡献自己的软件包。 Conan 提供了一个基于 Python 的开发工具包来创建软件包，其中包括用于定义构建过程、依赖项和软件包元数据的工具。
+
+要创建 Conan 软件包，开发人员需要定义 conanfile.py，以描述如何获取、构建和打包库。
+此文件包括 Conan 在软件包创建过程中执行的 source()、 build() 和 package() 等方法。
+一旦开发出软件包，就可以通过提交以供纳入的方式在 Conan Center 中进行共享，也可以通过私有存储库进行分发，以保持对分发和使用的控制。
+
+Conan 的灵活性、对多种平台和配置的支持以及其全面的软件包存储库使其成为 C++ 开发人员的宝贵工具。通过利用 Conan，团队可以简化其依赖项管理流程，确保在不同环境中实现一致、可重复的构建。配置静态或动态链接的能力，加上使用自定义软件包扩展存储库的选项，凸显了 Conan 对各种项目需求的适应性。无论是使用广泛使用的开源库还是专门的专有代码， Conan 都提供了一个强大的框架，可以高效、有效地管理 C++ 依赖项。
+
+Conan 是一款专用的 C++ 软件包管理器，擅长管理不同版本的库及其依赖项。它独立于操作系统的软件包管理器运行，并提供高水平的控制和灵活性。典型的 Conan 工作流程包括创建 conanfile.txt 或 conanfile.py 来声明依赖项。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

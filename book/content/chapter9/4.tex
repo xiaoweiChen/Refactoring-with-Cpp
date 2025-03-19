@@ -1,0 +1,53 @@
+在当今的软件开发领域， CMake 已成为构建系统事实上的行业标准。它提供了一种强大而灵活的方式来管理跨不同平台和编译器的构建。将 Clang-Format(一种自动格式化 C++ 代码的工具)集成到 CMake 构建过程中，有助于确保整个项目的代码格式一致。在本节中，我们将深入探讨如何有效实现这一点。
+
+首先，您必须首先使用 CMake 的 find\_program() 函数来识别系统上的 Clang-Format 可执行文件：
+
+\begin{cmake}
+# Find clang-format
+find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format)
+\end{cmake}
+
+接下来，您必须收集所有要格式化的源文件。\verb|file(GLOB _ RECURSE ...)| 函数对于此目的很有用：
+
+\begin{cmake}
+# Gather all source files from the root directory recursively
+file(GLOB_RECURSE ALL_SOURCE_FILES
+    *.cpp
+    *.cc
+    *.c++
+    *.c
+    *.C
+    *.h
+    *.hpp
+    *.hxx
+)
+\end{cmake}
+
+但是，有一个小问题：这种方法还包括来自构建目录的文件，您可能不想格式化这些文件。这通常也适用于第三方目录。幸运的是，您可以使用 CMake 的 \verb|list(FILTER ...)| 函数过滤掉这些文件：
+
+\begin{cmake}
+# Exclude files in the build directory
+list(FILTER ALL_SOURCE_FILES EXCLUDE REGEX "^${CMAKE_BINARY_DIR}.*")
+\end{cmake}
+
+最后，您必须创建一个自定义 CMake 目标，该目标在构建时在收集的源文件上运行 Clang-Format：
+
+\begin{cmake}
+# Create custom target to run clang-format
+if(CLANG_FORMAT_EXECUTABLE)
+    add_custom_target(
+        clang-format
+        COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file ${ALL_SOURCE_FILES}
+        COMMENT "Running clang-format"
+    )
+else()
+    message("clang-format not found! Target 'clang-format' will not be available.")
+endif()
+\end{cmake}
+
+通过这样做，您可以创建一个名为 clang-format 的自定义目标，开发人员可以运行该目标来自动格式化项目中的所有源文件，同时忽略构建目录中的任何文件。只需使用简单的 \verb|make clang-format| 或 \verb|cmake --build . --target clang-format| 命令即可执行此目标，确保轻松保持一致的格式。
+
+在构建过程中加入此 Clang-Format 和 CMake 集成不仅有助于保持一致的编码风格，而且还有助于更轻松地进行代码审查和协作开发。您可以随意将这些见解和代码片段纳入您的项目或您正在处理的任何技术文档中。
+
+
+
