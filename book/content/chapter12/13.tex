@@ -1,5 +1,5 @@
 
-在单元测试中，尤其是在与网络操作交互时，模拟是一种非常宝贵的技术。 Socket 类就是一个典型的例子，它是网络通信的基础元素。 Socket 类抽象了通过网络发送和接收原始字节数组的功能，提供了 send 和 recv 等方法。 TcpSocket、 UdpSocket 和 WebSocket 等具体类扩展了这个基类来实现特定的网络协议。以下代码显示了 Socket 类的定义：
+单元测试中，尤其是在与网络操作交互时，模拟是一种常用技术。 Socket 类就是一个典型的例子，它是网络通信的基础元素。 Socket 类抽象了通过网络发送和接收原始字节数组的功能，提供了 send 和 recv 等方法。 TcpSocket、 UdpSocket 和 WebSocket 等具体类扩展了这个基类来实现特定的网络协议。以下代码显示了 Socket 类的定义：
 
 \begin{cpp}
 class Socket {
@@ -13,7 +13,7 @@ class Socket {
 };
 \end{cpp}
 
-例如， DataSender 类依赖 Socket 实例来发送数据。该类经过精心设计，可管理数据传输、 根据需要尝试重试以及处理各种场景（例如部分数据发送、对等发起的连接关闭和连接错误）。对 DataSender 进行单元测试的目的是验证其在这些不同场景中的行为，而无需进行实际的网络通信。 DataSender 类定义如下：
+例如， DataSender 类依赖 Socket 实例来发送数据。该类经过精心设计，可管理数据传输、 根据需要尝试重试以及处理各种场景(例如部分数据发送、对等发起的连接关闭和连接错误)。对 DataSender 进行单元测试的目的是验证其在这些不同场景中的行为，而无需进行实际的网络通信。 DataSender 类定义如下：
 
 \begin{cpp}
 struct DataSentParitally {};
@@ -48,7 +48,7 @@ private:
 };
 \end{cpp}
 
-这一要求促使我们使用从 Socket 派生的 MockSocket 类来模拟网络交互。 MockSocket 的定义如下：
+这要求我们使用从 Socket 派生的 MockSocket 类来模拟网络交互。 MockSocket 的定义如下：
 
 \begin{cpp}
 class MockSocket : public Socket {
@@ -58,9 +58,9 @@ public:
 };
 \end{cpp}
 
-MockSocket 类利用 gMock 中的 MOCK\_METHOD 宏来模拟 Socket 类的 send 和 recv 方法，从而允许在测试期间指定预期行为。 override 关键字可确保这些模拟方法正确覆盖 Socket 类中的对应方法。
+MockSocket 类利用 gMock 中的 MOCK\_METHOD 宏，来模拟 Socket 类的 send 和 recv 方法，从而允许在测试期间指定预期行为。 override 关键字可确保这些模拟方法正确覆盖 Socket 类中的对应方法。
 
-在 gMock 中设置期望是使用 WillOnce 和 WillRepeatedly 等构造来完成的，它们定义了模拟方法在调用时的行为：
+在 gMock 中设置期望使用 WillOnce 和 WillRepeatedly 等构造来完成，定义了模拟方法在调用时的行为：
 
 \begin{cpp}
 TEST(DataSender, HappyPath) {
@@ -72,7 +72,7 @@ TEST(DataSender, HappyPath) {
 }
 \end{cpp}
 
-在这个 HappyPath 测试中， EXPECT\_CALL 设置了一个期望，即 send 将被调用一次，并在一次尝试中成功传输所有数据。
+HappyPath 测试中， EXPECT\_CALL 设置了一个期望，即 send 将调用一次，并在一次尝试中成功传输所有数据。
 
 \begin{cpp}
 TEST(DataSender, SendSuccessfullyOnSecondAttempt) {
@@ -114,22 +114,22 @@ TEST(DataSender, ConnectionError) {
 }
 \end{cpp}
 
-使用 gMock 运行这些测试并观察输出使我们能够确认 DataSender 类在各种条件下的行为：
+使用 gMock 运行这些测试并观察输出，能够确认 DataSender 类在各种条件下的行为：
 
 \begin{shell}
 [==========] Running 5 tests from 1 test suite.
 [----------] Global test environment set-up.
 [----------] 5 tests from DataSender
-[ RUN ] DataSender.HappyPath
-[ OK ] DataSender.HappyPath (0 ms)
-[ RUN ] DataSender.SendSuccessfullyOnSecondAttempt
-[ OK ] DataSender.SendSuccessfullyOnSecondAttempt (0 ms)
-[ RUN ] DataSender.DataSentPartially
-[ OK ] DataSender.DataSentPartially (1 ms)
-[ RUN ] DataSender.ConnectionClosedByPeer
-[ OK ] DataSender.ConnectionClosedByPeer (0 ms)
-[ RUN ] DataSender.ConnectionError
-[ OK ] DataSender.ConnectionError (0 ms)
+[ RUN      ] DataSender.HappyPath
+[       OK ] DataSender.HappyPath (0 ms)
+[ RUN      ] DataSender.SendSuccessfullyOnSecondAttempt
+[       OK ] DataSender.SendSuccessfullyOnSecondAttempt (0 ms)
+[ RUN      ] DataSender.DataSentPartially
+[       OK ] DataSender.DataSentPartially (1 ms)
+[ RUN      ] DataSender.ConnectionClosedByPeer
+[       OK ] DataSender.ConnectionClosedByPeer (0 ms)
+[ RUN      ] DataSender.ConnectionError
+[       OK ] DataSender.ConnectionError (0 ms)
 [----------] 5 tests from DataSender (1 ms total)
 
 [----------] Global test environment tear-down
@@ -137,17 +137,17 @@ TEST(DataSender, ConnectionError) {
 [ PASSED ] 5 tests.
 \end{shell}
 
-输出简洁地报告了每个测试的执行和结果，表明 DataSender 类对不同网络通信场景的处理已成功验证。有关使用 gMock 的更全面详细信息（包括其全套功能），官方 gMock 文档是一份重要资源，可指导开发人员在 C++ 单元测试中采用有效的模拟策略。
+输出简洁地报告了每个测试的执行和结果，表明 DataSender 类对不同网络通信场景的处理已成功验证。有关使用 gMock 的更全面详细信息(包括其全套功能)。官方 gMock 文档是一份重要资源，可指导开发人员在 C++ 单元测试中采用有效的模拟策略。
 
-\mySubsubsection{12.13.1}{通过依赖注入模拟非虚拟方法}
+\mySubsubsection{12.13.1}{通过依赖注入模拟非虚方法}
 
-在某些情况下，您可能需要模拟非虚拟方法以进行单元测试。这可能很有挑战性，因为传统的模拟框架（如 gMock）主要针对虚拟方法，这是由于 C++ 的多态性要求。但是，克服此限制的一种有效策略是通过依赖注入，结合使用模板。这种方法通过解耦类依赖关系来增强可测试性和灵活性。
+某些情况下，可能需要模拟非虚方法以进行单元测试。这可能很有挑战性，传统的模拟框架(如 gMock)主要针对虚方法，这是由于 C++ 的多态性要求。但克服此限制的一种有效策略是通过依赖注入，结合使用模板。这种方法通过解耦类依赖关系来增强可测试性和灵活性。
 
 \mySamllsectionNoContent{重构以提高可测试性}
 
-为了说明这一点，让我们重构 Socket 类接口和 DataSender 类以适应非虚拟方法的模拟。我们将向 DataSender 引入模板，以允许注入真实的 Socket 类或其模拟版本。
+为了说明这一点，重构 Socket 类接口和 DataSender 类以适应非虚方法的模拟。我们将向 DataSender 引入模板，以允许注入真实的 Socket 类或其模拟版本。
 
-首先，考虑一个没有虚方法的 Socket 类的简化版本：
+首先，时一个没有虚方法的 Socket 类(简化版本)：
 
 \begin{cpp}
 class Socket {
@@ -161,7 +161,7 @@ class Socket {
 };
 \end{cpp}
 
-接下来，我们修改 DataSender 类以接受套接字类型的模板参数，从而可以在编译时注入真实套接字或模拟套接字：
+接下来，修改 DataSender 类以接受套接字类型的模板参数，从而可以在编译时注入真实套接字或模拟套接字：
 
 \begin{cpp}
 template<typename SocketType>
@@ -190,11 +190,11 @@ private:
 };
 \end{cpp}
 
-通过这种基于模板的设计， DataSender 现在可以使用符合 Socket 接口的任何类型实例化，包括模拟类型。
+通过这种基于模板的设计， DataSender 现在可以使用符合 Socket 接口的类型实例化，包括模拟类型。
 
 \mySubsubsection{12.13.2}{使用模板进行模拟}
 
-对于Socket的模拟版本，我们可以这样定义一个MockSocket类：
+对于Socket的模拟版本，可以这样定义一个MockSocket类：
 
 \begin{cpp}
 class MockSocket {
@@ -208,7 +208,7 @@ class MockSocket {
 
 \mySamllsectionNoContent{使用依赖注入进行单元测试}
 
-在为 DataSender 编写测试时，我们现在可以使用模板注入 MockSocket：
+为 DataSender 编写测试时，可以使用模板注入 MockSocket：
 
 \begin{cpp}
 TEST(DataSender, HappyPath) {
@@ -220,17 +220,17 @@ TEST(DataSender, HappyPath) {
 }
 \end{cpp}
 
-在此测试中， DataSender 使用 MockSocket 实例化，允许根据需要模拟发送方法。这演示了模板和依赖项注入如何实现非虚拟方法的模拟，为 C++ 中的单元测试提供了一种灵活而强大的方法。
+此测试中， DataSender 使用 MockSocket 实例化，允许根据需要模拟发送方法。这演示了模板和依赖项注入如何实现非虚方法的模拟，为 C++ 中的单元测试提供了一种灵活而强大的方法。
 
-这种技术虽然功能强大，但需要仔细设计才能确保代码保持干净且易于维护。对于复杂的场景或进一步探索模拟策略，官方 gMock 文档仍然是一个宝贵的资源，它提供了有关高级模拟技术和最佳实践的大量信息。
+这种技术虽然功能强大，但需要仔细设计才能确保代码保持干净且易于维护。对于复杂的场景或进一步探索模拟策略，官方 gMock 文档仍然是一个宝贵的资源，提供了有关高级模拟技术和最佳实践的大量信息。
 
 \mySamllsectionNoContent{模拟单例}
 
-尽管由于可能在软件设计中引入全局状态和紧密耦合而被视为反模式，但单例模式在许多代码库中仍然很流行。它便于确保类只有一个实例，因此经常在数据库连接等场景中使用，在这些场景中，单一共享资源在逻辑上是合适的。
+尽管由于可能在软件设计中引入全局状态和紧密耦合而视为反模式，但单例模式在许多代码库中仍然很常用。它便于确保类只有一个实例，经常在数据库连接等场景中使用。在这些场景中，单一共享资源在逻辑上是合适的。
 
 单例模式的限制类实例和提供全局访问点的特性给单元测试带来了挑战，特别是当需要模拟单例行为时。
 
-考虑作为单例实现的数据库类的示例：
+考虑作为单例实现数据库类的示例：
 
 \begin{cpp}
 class Database {
@@ -247,7 +247,7 @@ private:
 };
 \end{cpp}
 
-在这种情况下， DataHandler 类与 Database 单例交互来执行操作，例如查询数据：
+这种情况下， DataHandler 类与 Database 单例交互来执行操作，例如查询数据：
 
 \begin{cpp}
 class DataHandler {
@@ -260,7 +260,7 @@ public:
 };
 \end{cpp}
 
-为了方便测试 DataHandler 类而不依赖于真实的数据库实例，我们可以引入一个模板变体 DataHandler1，它允许注入模拟数据库实例：
+为了方便测试 DataHandler 类而不依赖于真实的数据库实例，可以引入一个模板变体 DataHandler1，允许注入模拟数据库实例：
 
 \begin{cpp}
 template<typename Db>
@@ -290,7 +290,7 @@ public:
 };
 \end{cpp}
 
-有了 MockDatabase，单元测试现在可以模拟数据库交互而无需访问实际数据库，如下面的测试用例所示：
+有了 MockDatabase，单元测试现在可以模拟数据库交互，而无需访问实际数据库，如下面的测试用例所示：
 
 \begin{cpp}
 TEST(DataHandler, check) {
@@ -299,17 +299,17 @@ TEST(DataHandler, check) {
 }
 \end{cpp}
 
-此测试使用 MockDatabase 实例化 DataHandler1，确保 doSomething 方法与模拟而不是真实数据库进行交互。预期结果是预定义的模拟响应，使测试可预测且与外部依赖项隔离。
+此测试使用 MockDatabase 实例化 DataHandler1，确保 doSomething 方法与模拟，而非真实数据库进行交互。预期结果是预定义的模拟响应，使测试可预测且与外部依赖项隔离。
 
-此模板化解决方案是前面讨论的依赖项注入技术的一种变体，展示了 C++ 中模板的灵活性和强大功能。它巧妙地解决了模拟单例的挑战，从而增强了依赖于单例实例的组件的可测试性。对于更复杂的场景或进一步探索模拟策略，建议参考官方 gMock 文档，因为它提供了对高级模拟技术和最佳实践的全面见解。
+此模板化解决方案是前面讨论的依赖项注入技术的一种变体，展示了 C++ 中模板的灵活性和强大功能。它巧妙地解决了模拟单例的挑战，从而增强了依赖于单例实例的组件的可测试性。对于更复杂的场景或进一步探索模拟策略，建议参考官方 gMock 文档，其提供了对高级模拟技术和最佳实践的全面见解。
 
 \mySubsubsection{12.13.3}{Naggy、 Nice 和 Strict}
 
-在使用 gMock 进行单元测试的世界中，管理模拟对象的行为及其与被测系统的交互至关重要。 gMock 引入了三种模式来控制此行为： Naggy、 Nice 和 Strict。这些模式决定了 gMock 如何处理不感兴趣的调用（即任何 EXPECT\_CALL 都不匹配的调用）。
+使用 gMock 进行单元测试的世界中，管理模拟对象的行为及其与被测系统的交互至关重要。 gMock 引入了三种模式来控制此行为： Naggy、 Nice 和 Strict。这些模式决定了 gMock 如何处理不感兴趣的调用(即任何 EXPECT\_CALL 都不匹配的调用)。
 
 \mySamllsectionNoContent{Naggy 模式}
 
-默认情况下， gMock 中的模拟对象是"烦人的"。这意味着，虽然它们会警告不感兴趣的调用，但这些调用不会导致测试失败。警告提醒我们，模拟中可能会出现意外交互，但还不足以导致测试失败。此行为可确保测试专注于预期目标，而不会对偶然的交互过于宽松或过于严格。
+默认情况下， gMock 中的模拟对象是"烦人的"，虽然它们会警告不感兴趣的调用，但这些调用不会导致测试失败。警告提醒我们，模拟中可能会出现意外交互，但还不足以导致测试失败。此行为可确保测试专注于预期目标，而不会对偶然的交互过于宽松或严格。
 
 请考虑以下测试场景：
 
@@ -323,7 +323,7 @@ TEST(DataSender, Naggy) {
 }
 \end{cpp}
 
-在这种情况下，如果对 recv 有一个不感兴趣的调用， gMock 会发出警告，但测试将通过，标记意外的交互而不会导致测试失败。
+这种情况下，如果对 recv 有一个不感兴趣的调用， gMock 会发出警告，但测试将通过，标记意外的交互而不会导致测试失败。
 
 \mySamllsectionNoContent{Nice 模式}
 
@@ -341,11 +341,11 @@ TEST(DataSender, Nice) {
 }
 \end{cpp}
 
-在这种 Nice 模式下，即使有对 recv 的不感兴趣的调用， gMock 也会悄悄地忽略它们，保持测试输出干净并专注于定义的期望。
+在这种 Nice 模式下，即使有对 recv 的不感兴趣的调用， gMock 也会悄悄地忽略，保持测试输出干净，并专注于定义的期望。
 
 \mySamllsectionNoContent{Strict 模式}
 
-另一方面， StrictMock 对象将不感兴趣的调用视为错误。这种严格性可确保与模拟的每次交互都由 EXPECT\_CALL 负责。此模式在需要精确控制模拟交互的测试中特别有用，任何偏离预期的调用都会导致测试失败。
+另一方面， StrictMock 对象将不感兴趣的调用视为错误。这种严格性可确保与模拟的每次交互都由 EXPECT\_CALL 负责。此模式在需要精确控制模拟交互的测试中特别有用，偏离预期的调用都会导致测试失败。
 
 使用 StrictMock 的测试可能如下所示：
 
@@ -359,7 +359,7 @@ TEST(DataSender, Strict) {
 }
 \end{cpp}
 
-在严格模式下，任何不感兴趣的调用（例如 recv 调用）都会导致测试失败，从而严格遵守定义的期望。
+严格模式下，不感兴趣的调用(例如 recv 调用)都会导致测试失败，从而严格遵守定义的期望。
 
 \mySamllsectionNoContent{测试输出和推荐设置}
 
@@ -397,15 +397,15 @@ Uninteresting mock function call - returning default value.
 1 FAILED TEST
 \end{shell}
 
-在 Naggy 模式下，测试通过，但对无趣的调用发出警告。 Nice 模式也能通过，但没有任何警告。然而，如果存在无趣的调用，则严格模式会失败。
+在 Naggy 模式下，测试通过，但会对无趣的调用发出警告。 Nice 模式也能通过，但没有警告。然而，如果存在无趣的调用，则严格模式会失败。
 
 建议先从 StrickMock 开始，然后根据需要放宽模式。这种方法可确保测试最初严格遵守与模拟对象的交互，从而为意外调用提供安全网。随着测试套件的成熟和预期交互变得更加清晰，可以将模式放宽为 Naggy 或 Nice，以减少测试输出中的噪音。
 
 为了进一步探索这些模式和高级模拟技术，官方 gMock 文档提供了全面的见解和示例，指导开发人员在单元测试中进行有效的模拟对象管理。
 
-在本节中，我们深入研究了 Google Test (GTest) 和 Google Mock (GMock) 的功能和实际应用，它们是增强 C++ 项目的测试框架和开发工作流程的重要工具。 GTest 提供了一个用于创建、管理和执行单元测试的强大环境，其中包括用于共享设置和拆卸例程的测试装置、用于各种输入测试的参数化测试以及用于在不同数据类型上应用相同测试的类型参数化测试。其全面的断言库可确保彻底验证代码行为，从而有助于提高软件的稳定性和耐用性。
+本节中，我们深入研究了 Google Test (GTest) 和 Google Mock (GMock) 的功能和实际应用，是增强 C++ 项目的测试框架和开发工作流程的重要工具。 GTest 提供了一个用于创建、管理和执行单元测试的强大环境，其中包括用于共享设置和拆卸例程的测试装置、用于各种输入测试的参数化测试，以及用于在不同数据类型上应用相同测试的类型参数化测试。其全面的断言库可确保彻底验证代码行为，从而有助于提高软件的稳定性和耐用性。
 
-作为 GTest 的补充， GMock 允许无缝创建和使用模拟对象，通过模仿依赖项的行为实现独立组件测试。这在复杂系统中非常有用，因为直接测试真实依赖项不切实际或适得其反。借助 GMock，开发人员可以使用一系列功能，包括自动模拟生成、多种预期设置和详细行为验证，从而实现对组件交互的深入测试。
+作为 GTest 的补充， GMock 允许无缝创建和使用模拟对象，通过模仿依赖项的行为实现独立组件测试。这在复杂系统中非常有用，直接测试真实依赖项不切实际或适得其反。借助 GMock，开发人员可以使用一系列功能，包括自动模拟生成、多种预期设置和详细行为验证，从而实现对组件交互的深入测试。
 
 通过将 GTest 和 GMock 集成到 C++ 开发生命周期中，开发人员可以采用强大的测试驱动方法，确保代码质量并促进持续测试和集成实践，最终实现更可靠、更易于维护的软件项目。
 

@@ -21,7 +21,7 @@ sudo yum install boost-devel
 brew install boost
 \end{shell}
 
-Windows 用户经常使用 Chocolatey 或 vcpkg（后者除了在 Windows 中，还可以作为通用的C++ 库管理器）：
+Windows 用户经常使用 Chocolatey 或 vcpkg(后者除了在 Windows 中，还可以作为通用的C++ 库管理器)：
 
 \begin{shell}
 choco install boost
@@ -31,25 +31,25 @@ choco install boost
 
 \mySubsubsection{13.2.2}{通过子模块使用 Git 作为第三方管理器}
 
-Git 子模块允许开发人员直接在其存储库中包含和管理第三方库的源代码。此方法有利于确保所有团队成员和构建系统使用库的精确版本。添加子模块并将其与 CMake 集成的典型工作流程可能如下所示：
+Git 子模块允许开发人员，直接在其存储库中包含和管理第三方库的源代码。此方法有利于确保所有团队成员和构建系统使用库的精确版本。添加子模块并将其与 CMake 集成的典型工作流程可能如下所示：
 
 \begin{shell}
 git submodule add https://github.com/google/googletest.git external/googletest
 git submodule update --init
 \end{shell}
 
-在 CMakeLists.txt 中，您需要包含子模块：
+CMakeLists.txt 中，需要包含子模块：
 
 \begin{cmake}
 add_subdirectory(external/googletest)
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 \end{cmake}
 
-此方法将您的项目与库的特定版本紧密结合，并方便通过 Git 跟踪更新。
+此方法将项目与库的特定版本紧密结合，并方便通过 Git 跟踪更新。
 
 \mySubsubsection{13.2.3}{使用 CMake FetchContent 下载库}
 
-CMake 的 FetchContent 模块通过在配置时下载依赖项提供了比子模块更灵活的替代方案，而无需将它们直接包含在您的存储库中：
+CMake 的 FetchContent 模块通过在配置时下载依赖项，提供了比子模块更灵活的替代方案，而无需将其直接包含在存储库中：
 
 \begin{cmake}
 include(FetchContent)
@@ -61,7 +61,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(json)
 \end{cmake}
 
-这种方法与 Git 子模块不同，它不需要库的源代码存在于您的存储库中或手动更新它。 FetchContent 动态检索指定的版本，使管理和更新依赖项变得更加容易。
+这种方法与 Git 子模块不同，不需要库的源代码存在于库中或手动更新它。 FetchContent 动态检索指定的版本，使管理和更新依赖项变得更加容易。
 
 
 

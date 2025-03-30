@@ -13,10 +13,10 @@
 支持的语言：虽然 Clang-Tidy 主要关注 C 和 C++，但 PVS-Studio 支持更广泛的语言，包括 C\#、 Java 甚至混合 C/C++/C\# 代码库。
 
 \item
-集成和使用： PVS-Studio 可以集成到各种 IDE 和持续集成 (CI) 系统中。它与 Clang-Tidy 的不同之处在于它是一个独立工具，不依赖于 Clang 等特定编译器。
+集成和使用： PVS-Studio 可以集成到各种 IDE 和持续集成 (CI) 系统中。它与 Clang-Tidy 的不同之处在于是一个独立工具，不依赖于 Clang 等特定编译器。
 
 \item
-独特的功能：它提供对潜在代码漏洞的广泛检查，并因其详细的诊断信息而受到称赞。
+独特的功能：提供对潜在代码漏洞的广泛检查，并因其详细的诊断信息而受到称赞。
 \end{itemize}
 
 \mySubsubsection{10.5.2}{SonarQube}
@@ -28,14 +28,13 @@ SonarQube 具有以下优势：
 重点： SonarQube 提供了一套全面的代码质量检查，包括错误、代码异味和安全漏洞
 
 \item
-支持的语言：它支持多种编程语言，使其成为多语言项目的多功能选择
+支持的语言：支持多种编程语言，使其成为多语言项目的多功能选择
 
 \item
 集成和使用： SonarQube 以其基于 Web 的仪表板脱颖而出，该仪表板提供了代码质量的详细概述，与 Clang-Tidy 相比提供了更全面的视图
 
 \item
-独特功能：它包括代码覆盖率和技术债务评估功能，而这些并不是 Clang-Tidy 的主要关
-注点
+独特功能：包括代码覆盖率和技术债务评估功能，而这些并不是 Clang-Tidy 的主要关注点
 \end{itemize}
 
 \mySubsubsection{10.5.3}{其他值得注意的工具}
@@ -50,12 +49,12 @@ Cppcheck： Cppcheck 是一款静态分析工具，专门针对 C 和 C++ 语言
 Coverity： Coverity 以其高准确性和对多种编程语言的支持而闻名，是商业和开源项目中用于检测软件缺陷和安全漏洞的工具。
 
 \item
-Visual Studio 静态分析：此工具集成到 Visual Studio IDE 中，提供专门针对 Windows 开发定制的检查。对于主要在 Windows 生态系统中工作的开发人员来说，它非常有用。
+Visual Studio 静态分析：此工具集成到 Visual Studio IDE 中，提供专门针对 Windows 开发定制的检查。对于主要在 Windows 生态系统中工作的开发人员来说非常有用。
 \end{itemize}
 
 \mySubsubsection{10.5.4}{与 Clang-Tidy 的比较}
 
-现在让我们将上述工具与 Clang-Tidy 进行比较：
+现在将上述工具与 Clang-Tidy 进行比较：
 
 \begin{itemize}
 \item
@@ -65,7 +64,7 @@ Visual Studio 静态分析：此工具集成到 Visual Studio IDE 中，提供�
 集成和报告： Clang-Tidy 与 LLVM/Clang 生态系统紧密集成，使其成为已经使用这些工具的项目的绝佳选择。相比之下， SonarQube 提供了全面的仪表板， PVS-Studio 提供了详细的报告，这对较大的项目或团队大有裨益。
 
 \item
-具体用例： Cppcheck 和 Visual Studio Static Analysis 等工具有特定的用途 - Cppcheck 具有轻量级特性并专注于 C/C++，而 Visual Studio Static Analysis 则具有针对 Windows 的检查。
+具体用例： Cppcheck 和 Visual Studio Static Analysis 等工具有特定的用途 --- Cppcheck 具有轻量级特性并专注于 C/C++，而 Visual Studio Static Analysis 则具有针对 Windows 的检查。
 
 \item
 商业与开源： Clang-Tidy 是开源的并且可以免费使用，而 Coverity 和 PVS-Studio 等工具是商业产品，提供企业级功能和支持。

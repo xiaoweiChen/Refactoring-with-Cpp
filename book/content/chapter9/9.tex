@@ -1,4 +1,4 @@
-我们可以调整现有的 CMake 设置，使其包含 Clang-Tidy 检查，类似于我们对 Clang-Format 所做的操作。以下是示例 CMake 脚本，用于设置自定义目标以在 C++ 项目上运行 Clang-Tidy：
+可以调整现有的 CMake 设置，使其包含 Clang-Tidy 检查，类似于我们对 Clang-Format 所做的操作。以下是示例 CMake 脚本，用于设置自定义目标以在 C++ 项目上运行 Clang-Tidy：
 
 \begin{cmake}
 # Generate compilation database in the build directory
@@ -52,15 +52,15 @@ endif()
 
 \begin{itemize}
 \item
-clang-tidy：此目标在所有收集的源文件上运行 Clang-Tidy。 \verb|-p=${CMAKE_BINARY_DIR}| 标志指定包含 compile\_command.json 文件的构建目录， Clang-Tidy 将使用该文件进行检查。此 JSON 文件由 CMake 生成，包含有关项目中每个源文件如何编译的信息。它包括编译器选项、包含目录、定义等详细信息。 Clang-Tidy 使用此信息来了解每个源文件的构建上下文，从而使其能够执行更准确、更有意义的检查。
+clang-tidy：此目标在所有收集的源文件上运行 Clang-Tidy。 \verb|-p=${CMAKE_BINARY_DIR}| 标志指定包含 compile\_command.json 文件的构建目录， Clang-Tidy 将使用该文件进行检查。此 JSON 文件由 CMake 生成，包含有关项目中每个源文件如何编译的信息，包括编译器选项、包含目录、定义等详细信息。 Clang-Tidy 使用此信息来了解每个源文件的构建上下文，从而使其能够执行更准确、更有意义的检查。
 
 \item
 check-clang-tidy：此目标执行相同的操作，但带有 \verb|--warnings-as-errors=*| 标志。这会将所有警告视为错误，这对于 CI/CD 管道确保代码质量特别有用。
 \end{itemize}
 
-与您之前的设置一样，可以通过 \verb|make clang-tidy| 或 \verb|make check-clang-tidy| 或它们的等效 \verb|cmake --build . --target clang-tidy| 和 \verb|cmake --build . --target check-clang-tidy| 来运行这些自定义目标。
+与之前的设置一样，可以通过 \verb|make clang-tidy| 或 \verb|make check-clang-tidy| 或它们的等效 \verb|cmake --build . --target clang-tidy| 和 \verb|cmake --build . --target check-clang-tidy| 来运行这些自定义目标。
 
-通过将 Clang-Tidy 集成到 CMake 构建过程中，您将提供另一层自动代码质量检查，就像您对 Clang-Format 所做的那样。您可以随意将其包含在您的章节中，以全面了解自动代码质量保证。
+通过将 Clang-Tidy 集成到 CMake 构建过程中，将提供另一层自动代码质量检查，就像对 Clang-Format 所做的那样，以便自动化保证代码质量。
 
 
 

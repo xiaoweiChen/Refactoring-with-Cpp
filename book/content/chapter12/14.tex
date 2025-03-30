@@ -3,22 +3,23 @@
 
 \mySubsubsection{12.14.1}{Catch2}
 
-Catch2 以其简单易用而脱颖而出，只需极少的样板代码即可开始使用。它采用纯头文件分发，因此很容易集成到项目中。 Catch2 支持各种测试范例，包括 BDD 样式的测试用例，并提供富有表现力的断言宏，可增强测试的可读性和意图。其突出的功能是"Sections"机制，它提供了一种以灵活且分层的方式在测试之间共享设置和拆卸代码的自然方法。
+Catch2 以其简单易用而脱颖而出，只需极少的样板代码即可开始使用。采用纯头文件\footnote{译者注：最新版本的Catch2已经不以纯头文件方式发布了，发布方式类似于Google Test。}分发，很容易集成到项目中。 Catch2 支持各种测试范例，包括 BDD 样式的测试用例，并提供富有表现力的断言宏，可增强测试的可读性和意图。其突出的功能是“Sections”机制，提供了一种以灵活且分层的方式在测试之间，共享设置和拆卸代码的方法。
 
 \mySubsubsection{12.14.2}{Boost.Test}
 
-作为 Boost 库的一部分， Boost.Test 为 C++ 中的单元测试提供了强大的支持。它提供了全面的断言框架、测试组织工具以及与 Boost 构建系统的集成。 Boost.Test 可以在仅标头模式或编译模式下使用，从而为其部署提供了灵活性。它以详细的测试结果报告和用于测试用例管理的各种内置工具而闻名，因此适用于小型和大型项目。
+作为 Boost 库的一部分， Boost.Test 为 C++ 中的单元测试提供了强大的支持。提供了全面的断言框架、测试组织工具以及与 Boost 构建系统的集成。 Boost.Test 可以在仅头文件模式或编译模式下使用，从而为其部署提供了灵活性。它以详细的测试结果报告，和用于测试用例管理的各种内置工具而闻名，因此适用于小型和大型项目。
 
 \mySubsubsection{12.14.3}{Doctest}
 
 Doctest 的设计重点是简洁性和速度，将自己定位为功能最丰富、最轻量的 C++ 测试框架。
+
 由于其编译时间快，它对 TDD 特别有吸引力。受 Catch2 的启发， Doctest 提供了类似的语法，但旨在更轻量且编译速度更快，使其成为在日常开发中包含测试的理想选择，而不会显著影响构建时间。
 
-\mySubsubsection{12.14.4}{Google Test 与 Catch2 与 Boost.Test 与 Doctest 对比}
+\mySubsubsection{12.14.4}{Google Test --- Catch2 --- Boost.Test --- Doctest 间的对比}
 
 \begin{itemize}
 \item
-简单性： Catch2 和 Doctest 在简单性和易用性方面表现出色，其中 Catch2 提供 BDD 风格的语法，而 Doctest 非常轻量级
+简单性： Catch2 和 Doctest 在简单性和易用性方面表现出色，其中 Catch2 提供 BDD \footnote{译者注：行为驱动开发，Behavior-Driven Development}风格的语法，而 Doctest 非常轻量级
 
 \item
 集成： Google Test 和 Boost.Test 将提供更广泛的集成功能，特别适合具有复杂测试需求的大型项目。

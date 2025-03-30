@@ -3,11 +3,11 @@ vcpkg 由 Microsoft 开发，是一款跨平台的 C++ 软件包管理器，可�
 
 \mySubsubsection{13.5.1}{与Conan的主要区别}
 
-虽然 vcpkg 和 Conan 都旨在简化 C++ 项目中的依赖管理，但它们的方法和生态系统存在显着差异：
+虽然 vcpkg 和 Conan 都旨在简化 C++ 项目中的依赖管理，但方法和生态系统存在显着差异：
 
 \begin{itemize}
 \item
-起源和支持： vcpkg 由 Microsoft 创建并维护，这确保了它与 Visual Studio 和 MSBuild系统紧密集成，尽管它在不同平台和开发环境中仍然具有完整的功能和实用性。
+起源和支持： vcpkg 由 Microsoft 创建并维护，这确保了它与 Visual Studio 和 MSBuild系统紧密集成。
 
 \item
 软件包来源： vcpkg 专注于从源代码进行编译，确保库使用与使用项目相同的编译器和设置构建。这种方法与 Conan 形成对比， Conan 可以管理预编译的二进制文件，从而实现更快的集成，但可能会导致二进制不兼容问题。
@@ -16,13 +16,12 @@ vcpkg 由 Microsoft 开发，是一款跨平台的 C++ 软件包管理器，可�
 集成： vcpkg 与 CMake 和 Visual Studio 原生集成，为项目级集成提供清单文件。这对于已经使用这些工具的项目来说尤其有吸引力，可以提供更无缝的集成体验。
 
 \item
-生态系统和库：两个包管理器都拥有大量可用的库，但由于每个项目的社区和支持，它
-们的生态系统可能略有不同。
+生态和库：两个包管理器都拥有大量可用的库，但由于每个项目的社区和支持，其生态略有不同。
 \end{itemize}
 
 \mySubsubsection{13.5.2}{支持操作系统}
 
-vcpkg 被设计为跨平台，支持以下内容：
+vcpkg 为跨平台，支持以下内容：
 
 \begin{itemize}
 \item
@@ -35,13 +34,13 @@ Linux
 macOS
 \end{itemize}
 
-这种广泛的支持使其成为在不同开发环境中工作的开发人员的多功能选择。
+这种广泛的支持，使其成为在不同开发环境中工作的开发人员的多功能选择。
 
 \mySubsubsection{13.5.3}{使用 vcpkg 配置项目的示例}
 
-为了说明如何在项目中使用 vcpkg，让我们通过一个简单的示例，使用 CMake 将一个库（ 例如，用于现代 C++ 库的 JSON（nlohmann-json））集成到 C++ 项目中。
+为了说明如何在项目中使用 vcpkg，可通过一个简单的示例，使用 CMake 将一个库( 例如，用于现代 C++ 库的 JSON(nlohmann-json))集成到 C++ 项目中。
 
-克隆 vcpkg 存储库并运行引导脚本：
+复制 vcpkg 库并运行引导脚本：
 
 \begin{shell}
 git clone https://github.com/Microsoft/vcpkg.git
@@ -53,13 +52,13 @@ Install nlohmann-json using vcpkg:
 
 vcpkg 将下载并编译该库，使其可用于项目。
 
-要将 vcpkg 与 CMake 项目一起使用，您可以在配置项目时将 CMAKE\_TOOLCHAIN\_FILE 变量设置为 vcpkg.cmake 工具链文件的路径：
+要将 vcpkg 与 CMake 项目一起使用，可以在配置项目时将 CMAKE\_TOOLCHAIN\_FILE 变量设置为 vcpkg.cmake 工具链文件的路径：
 
 \begin{shell}
 cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=[vcpkg root]/scripts/buildsystems/vcpkg.cmake
 \end{shell}
 
-将[vcpkg root]替换为vcpkg的安装路径。在你的CMakeLists.txt中，找到并链接nlohmann-json包：
+将[vcpkg root]替换为vcpkg的安装路径。在CMakeLists.txt中，找到并链接nlohmann-json包：
 
 \begin{cmake}
 cmake_minimum_required(VERSION 3.0)
@@ -71,7 +70,7 @@ add_executable(my_app main.cpp)
 target_link_libraries(my_app PRIVATE nlohmann_json::nlohmann_json)
 \end{cmake}
 
-在main.cpp中，你现在可以使用nlohmann-json库：
+在main.cpp中，可以使用nlohmann-json库：
 
 \begin{cpp}
 #include <nlohmann/json.hpp>
@@ -83,40 +82,41 @@ int main() {
 }
 \end{cpp}
 
-vcpkg 注重基于源代码的分发以及与 CMake 和 Visual Studio 的集成，为希望有效管理库依赖项的 C++ 开发人员提供了强大的解决方案。它的简单性加上 Microsoft 的支持，使其成为优先考虑与构建环境的一致性和与现有 Microsoft 工具无缝集成的项目的有力选择。虽然它在简化依赖项管理方面与 Conan 有着共同的目标，但 vcpkg 和 Conan 之间的选择可能取决于特定的项目要求、首选工作流程和开发生态系统。
+vcpkg 注重基于源代码的分发，以及与 CMake 和 Visual Studio 的集成，为希望有效管理库依赖项的 C++ 开发人员提供了强大的解决方案。其简单性加上 Microsoft 的支持，使其成为优先考虑与构建环境的一致性和与现有 Microsoft 工具无缝集成的项目的有力选择。虽然在简化依赖项管理方面与 Conan 有着共同的目标，但 vcpkg 和 Conan 之间的选择可能取决于特定的项目要求、首选工作流程和开发生态。
 
 \mySubsubsection{13.5.4}{利用 Docker 进行 C++ 构建}
 
-C++ 的一个显著缺陷是缺乏管理依赖项的内在机制。因此，第三方元素的整合是通过多种方法实现的：利用 Linux 发行版提供的包管理器（例如 apt-get）、通过 make install 直接安装、将第三方库作为 Git 子模块包含在项目源代码树中，然后对其进行编译，或者采用 Conan 或 Vcpkgvcpkg 等包管理解决方案。
+C++ 的一个显著缺陷是缺乏管理依赖项的内在机制。因此，第三方元素的整合是通过多种方法实现的：利用 Linux 发行版提供的包管理器(例如 apt-get)、通过 make install 直接安装、将第三方库作为 Git 子模块包含在项目源代码树中，然后对其进行编译，或者采用 Conan 或 Vcpkg 等包管理解决方案。
 
 遗憾的是，每种方法都有自己的缺点：
 
 \begin{itemize}
 \item
-直接在开发机器上安装依赖项往往会损害环境的清洁度，使其与 CI/CD 管道或生产环境不同 - 这种差异随着第三方组件的每次更新而变得更加明显。
+直接在开发机器上安装依赖项往往会损害环境的清洁度，使其与 CI/CD 管道或生产环境不同 --- 这种差异随着第三方组件的每次更新而变得更加明显。
 
 \item
-•确保所有开发人员使用的编译器、调试器和其他工具的版本统一通常是一项艰巨的任务。缺乏标准化可能会导致构建在单个开发人员的机器上成功执行，但在 CI/CD 环境中却失败。
+确保所有开发人员使用的编译器、调试器和其他工具的版本统一通常是一项艰巨的任务。缺乏标准化可能会导致构建在单个开发人员的机器上成功执行，但在 CI/CD 环境中却失败。
 
 \item
-•将第三方库作为 Git 子模块集成并在项目源目录中进行编译的做法是一项挑战，特别是在处理大量库（例如 Boost、 Protobuf、 Thrift 等）时。这种方法可能会导致构建过程显著减慢，以至于开发人员可能会犹豫是否要清除构建目录或在分支之间切换。
+将第三方库作为 Git 子模块集成并在项目源目录中进行编译的做法是一项挑战，特别是在处理大量库(例如 Boost、 Protobuf、 Thrift 等)时。这种方法可能会导致构建过程显著减慢，以至于开发人员可能会犹豫，是否要清除构建目录或在分支之间切换。
 
 \item
-诸如 Conan 之类的包管理解决方案可能并不总是提供特定依赖项所需的版本，并且包含这样的版本需要用 Python 编写额外的代码，在我看来，这是过于繁重的。
+诸如 Conan 之类的包管理解决方案，可能并不总是提供特定依赖项所需的版本，并且包含这样的版本需要用 Python 编写代码。在我看来，这过于繁琐了。
 \end{itemize}
 
 \mySamllsectionNoContent{单一、独立且可重复的构建环境}
 
 解决上述挑战的最佳方法是制定一个 Docker 镜像，嵌入所有必要的依赖项和工具，如编译器和调试器，以方便在从该镜像派生的容器内进行项目的编译。
 
-这个特定的图像是单一构建环境的基石，开发人员在各自的工作站以及 CI/CD 服务器上统一使用该环境，有效地消除了"它在我的计算机上运行但在 CI 上失败！"这种常见的差异。
-由于容器内构建过程的封装特性，它不受任何外部变量、工具或特定于单个开发人员本地设置的配置的影响，从而使构建环境变得孤立。
+这个特定的图像是单一构建环境的基石，开发人员在各自的工作站以及 CI/CD 服务器上统一使用该环境，有效地消除了“它在我的计算机上没问题，但在 CI 上失败！”这种常见的差异。
+
+由于容器内构建过程的封装特性，不受外部变量、工具或特定于单个开发人员本地设置的配置的影响，从而使构建环境变得孤立。
 
 在理想情况下， Docker 镜像会用有意义的版本标识符进行精心标记，使用户能够通过从注册表中检索适当的镜像来无缝地在不同环境之间转换。此外，如果注册表中不再提供镜像，值得注意的是， Docker 镜像是由 Dockerfile 构建的，而 Dockerfile 通常在 Git 存储库中维护。这确保了在需要时，始终可以从 Dockerfile 的先前版本重建镜像。 Dockerized 构建框架的这一属性使其具有可重现的特性。
 
 \mySamllsectionNoContent{创建构建映像}
 
-我们将着手开发一个简单的应用程序并在容器内编译它。该应用程序的本质是利用 boost::fil esystem 显示其大小。本次演示选择 Boost 是有意为之，旨在说明 Docker 与"重型"第三方库的集成：
+我们将着手开发一个简单的应用程序并在容器内编译它。该应用程序的本质是利用 boost::filesystem 显示其大小。本次演示选择 Boost 是有意为之，旨在说明 Docker 与“重型”第三方库的集成：
 
 \begin{cpp}
 #include <boost/filesystem/operations.hpp>
@@ -168,10 +168,10 @@ target_link_libraries(${PROJECT_NAME}
 \end{cmake}
 
 \begin{myNotic}{Note}
-在这个例子中， Boost 是静态链接的，因为如果目标机器没有预先安装正确版本的 Boost，则需要它；此建议适用于 Docker 映像中预先安装的所有依赖项。
+这个例子中， Boost 是静态链接的，如果目标机器没有预先安装正确版本的 Boost，则需要安装；此建议适用于 Docker 映像中预先安装的所有依赖项。
 \end{myNotic}
 
-用于此任务的Dockerfile 非常简单：
+用于此任务的Dockerfile：
 
 \begin{shell}
 FROM ubuntu:18.04
@@ -200,16 +200,16 @@ RUN cd ${HOME} && \
         rm -rf ./boost_1_77_0
 \end{shell}
 
-为了确保其名称具有独特性并且不与现有的 Dockerfile 重叠，同时也清楚地传达其用途，我将其命名为 DockerfileBuildEnv：
+为了确保其名称具有独特性并且不与现有的 Dockerfile 重复，同时也清楚地传达其用途，我将其命名为 DockerfileBuildEnv：
 
 \begin{shell}
 $ docker build -t example/example_build:0.1 -f DockerfileBuildEnv .
 Here is supposed to be a long output of boost build
 \end{shell}
 
-*请注意，该版本不是"最新版本"，但有一个有意义的名称（例如， 0.1） 。
+*请注意，该版本不是“最新版本”，但有一个有意义的名称(例如， 0.1) 。
 
-一旦成功构建了镜像，我们就可以继续项目的构建过程了。第一步是启动一个基于我们制作的镜像的 Docker 容器，然后在这个容器中执行 Bash shell：
+成功构建了镜像后，就可以继续项目的构建过程了。第一步是启动一个基于制作的镜像的 Docker 容器，然后在这个容器中执行 Bash shell：
 
 \begin{shell}
 $ cd project
@@ -219,9 +219,9 @@ $ docker run -it --rm --name=example \
   bash
 \end{shell}
 
-在此上下文中特别重要的参数是 --mount type=bind,source=\$\{PWD\},target=/src。此指令指示 Docker 将包含源代码的当前目录绑定挂载到容器内的 /src 目录。这种方法避免了将源文件复制到容器中的需要。此外，正如随后将演示的那样，它允许将输出二进制文件直接存储在主机的文件系统上，从而消除了冗余复制的需要。要了解其余标志和选项，建议查阅官方 Docker 文档。
+在此上下文中特别重要的参数是 --mount type=bind,source=\$\{PWD\},target=/src。此指令指示 Docker 将包含源代码的当前目录绑定挂载到容器内的 /src 目录。这种方法避免了将源文件复制到容器中的需要。正如随后将演示的那样，其允许将输出二进制文件直接存储在主机的文件系统上，从而消除了冗余复制的需要。要了解其余标志和选项，建议查阅官方 Docker 文档。
 
-在容器内，我们将继续编译项目：
+在容器内，将继续编译项目：
 
 \begin{shell}
 root@3abec58c9774:/# cd src
@@ -257,7 +257,7 @@ Scanning dependencies of target a.out
 
 瞧，项目已成功构建！
 
-由于 Boost 是静态链接的，因此生成的二进制文件在容器和主机上均可成功运行：
+由于 Boost 是静态链接的，生成的二进制文件在容器和主机上均可成功运行：
 
 \begin{shell}
 $ build/a.out
@@ -267,36 +267,36 @@ The size of "/home/dima/dockerized_cpp_build_example/build/a.out" is 177320
 \mySamllsectionNoContent{使环境可用}
 
 此时，面对如此多的 Docker 命令，您可能会感到不知所措，并想知道如何才能记住它们。
-需要强调的是，开发人员不需要为了构建项目而记住这些命令的每个细节。为了简化此过程，我建议将 Docker 命令封装在一个大多数开发人员都熟悉的工具中 - make。
 
-为了实现这一点，我建立了一个 GitHub 存储库 (\url{https://github.com/f-squirrel/dockerized_cpp}) ，其中包含一个多功能 Makefile。此 Makefile 旨在易于适应，通常可用于几乎任何使用 CMake 的项目，而无需进行修改。用户可以选择直接从此存储库下载它，也可以将其作为 Git 子模块集成到他们的项目中，以确保访问最新更新。我提倡后一种方法，并将提供有关此方法的更多详细信息。
+需要强调的是，开发人员不需要为了构建项目而记住这些命令的每个细节。为了简化此过程，我建议将 Docker 命令封装在一个大多数开发人员都熟悉的工具中 --- make。
+
+为了实现这一点，我建立了一个 GitHub 库 (\url{https://github.com/f-squirrel/dockerized_cpp}) ，其中包含一个多功能 Makefile。此 Makefile 旨在易于适应，通常可用于任何使用 CMake 的项目，而无需进行修改。用户可以选择直接从此存储库下载它，也可以将其作为 Git 子模块集成到他们的项目中，以确保访问最新更新。我提倡后一种方法，并将提供有关此方法的更多详细信息。
 
 Makefile 配置为支持基本命令。用户可以通过在终端中执行 make help 显示可用的命令选项：
 
 \begin{shell}
 $ make help
 gen_cmake               Generate cmake files, used internally
-build                   Build source. In order to build a
-specific target run: make TARGET=<target name>.
+build                   Build source. In order to build a specific target run: make TARGET=<target name>.
 test                    Run all tests
 clean                   Clean build directory
 login                   Login to the container. Note: if the container is already running, login into the existing one
 build-docker-deps-image Build the deps image.
 \end{shell}
 
-为了将 Makefile 集成到我们的示例项目中，我们首先将其作为 Git 子模块添加到 build\_tools 目录中：
+为了将 Makefile 集成到我们的示例项目中，首先将其作为 Git 子模块添加到 build\_tools 目录中：
 
 \begin{shell}
 git submodule add https://github.com/f-squirrel/dockerized_cpp.git build_tools/
 \end{shell}
 
-下一步是在存储库的根目录中创建另一个 Makefile，并包含我们刚刚检出的 Makefile：
+下一步是在库的根目录中创建另一个 Makefile，并包含刚刚得到的 Makefile：
 
 \begin{shell}
 include build_tools/Makefile
 \end{shell}
 
-在项目编译之前，明智的做法是调整某些默认设置以更好地满足项目的特定需求。这可以通过在包含 build\_tools/Makefile 之前在顶级 Makefile 中声明变量来有效地实现。这种预先声明允许自定义各种参数，确保构建环境和流程根据您的项目要求进行最佳配置：
+项目编译之前，明智的做法是调整某些默认设置以更好地满足项目的特定需求。这可以通过在包含 build\_tools/Makefile 之前在顶层 Makefile 中声明变量来有效地实现。这种预先声明允许自定义各种参数，确保构建环境和流程根据项目要求进行最佳配置：
 
 \begin{shell}
 PROJECT_NAME=example
@@ -323,9 +323,9 @@ If you want the image to be the default, please update the following variables:
 /home/dima/dockerized_cpp_build_example/Makefile: DOCKER_DEPS_VERSION
 \end{shell}
 
-Makefile 默认为 Docker 镜像分配最新标记。为了更好地控制版本并与项目当前阶段保持一致，建议为镜像标记特定版本。在此上下文中，我们将镜像标记为 0.1。
+Makefile 默认为 Docker 镜像分配最新标记。为了更好地控制版本并与项目当前阶段保持一致，建议为镜像标记特定版本。此上下文中，将镜像标记为 0.1。
 
-最后，让我们构建项目：
+最后，构建项目：
 
 \begin{shell}
 $ make
@@ -376,13 +376,13 @@ Build finished. The binaries are in /home/dima/dockerized_cpp_
 build_example/build
 \end{shell}
 
-检查主机上的构建目录后，您将观察到输出二进制文件已被无缝地放置在那里，便于访问和管理。
+检查主机上的构建目录后，将观察到输出二进制文件已放置在那里，便于访问和管理。
 
-您可以在 GitHub 上找到 Makefile 以及利用其默认值的项目示例。这提供了如何将 Makefile 集成到项目中的实际演示，为寻求在其 C++ 项目中实现 Dockerized 构建环境的开发人员提供了交钥匙解决方案：
+可以在 GitHub 上找到 Makefile 以及利用其默认值的项目示例。这提供了如何将 Makefile 集成到项目中的实际演示，为寻求在其 C++ 项目中实现 Dockerized 构建环境的开发人员提供了解决方案：
 
 \begin{itemize}
 \item
-Makefile 存储库： \url{https://github.com/f-squirrel/dockerized_cpp}
+Makefile 库： \url{https://github.com/f-squirrel/dockerized_cpp}
 
 \item
 示例项目： \url{https://github.com/f-squirrel/dockerized_cpp}
@@ -390,7 +390,7 @@ Makefile 存储库： \url{https://github.com/f-squirrel/dockerized_cpp}
 
 \mySamllsectionNoContent{Dockerized 构建中用户管理的增强功能}
 
-基于 Docker 的构建系统的初始迭代在 root 用户的权限下执行操作。虽然这种设置通常不会立即造成问题（开发人员可以选择使用 chmod 修改文件权限），但从安全角度来看，通常不鼓励以 root 用户身份执行 Docker 容器。更重要的是，如果任何构建目标修改了源代码（ 例如代码格式化或通过 make 命令应用 clang-tidy 更正），这种方法可能会导致复杂情况。此类修改可能导致源文件归 root 用户所有，从而限制直接从主机编辑这些文件的能力。
+基于 Docker 的构建系统的初始迭代在 root 用户的权限下执行操作。虽然这种设置通常不会立即造成问题(开发人员可以选择使用 chmod 修改文件权限)，但从安全角度来看，通常不鼓励以 root 用户身份执行 Docker 容器。更重要的是，如果构建目标修改了源代码( 例如：代码格式化或通过 make 命令应用 clang-tidy 更正)，这种方法可能会导致复杂情况。此类修改可能导致源文件归 root 用户所有，从而限制直接从主机编辑这些文件的能力。
 
 为了解决这一问题， Dockerized 构建的源代码已进行了修改，通过指定当前用户的 ID 和组ID，容器可以以主机用户身份执行。此调整现在是标准配置，以增强安全性和可用性。如果需要恢复以 root 用户身份运行容器，可以使用以下命令：
 
@@ -398,7 +398,7 @@ Makefile 存储库： \url{https://github.com/f-squirrel/dockerized_cpp}
 make DOCKER_USER_ROOT=ON
 \end{shell}
 
-需要注意的是， Docker 镜像不会完整复制主机用户的环境 — 没有对应的主目录，容器内也不会复制用户名和组。这意味着，如果构建过程依赖于访问主目录，则这种修改后的方法可能不合适。
+需要注意的是， Docker 镜像不会完整复制主机用户的环境 --- 没有对应的主目录，容器内也不会复制用户名和组。如果构建过程依赖于访问主目录，则这种修改后的方法可能不合适。
 
 
 

@@ -1,20 +1,19 @@
 
-Commitlint 是一款功能强大的可配置工具，旨在强制执行提交消息约定，确保整个项目提交历史的一致性和清晰度。它在维护干净、可读且有意义的提交日志方面起着至关重要的作用，尤其是与常规提交规范等约定结合使用时。本节提供了有关如何安装、配置和使用 commitlint 在本地检查提交消息的全面指南，从而促进规范的版本控制和协作方法。
+Commitlint 是一款功能强大的可配置工具，旨在强制执行提交消息约定，确保整个项目提交历史的一致性和清晰度。在维护干净、可读且有意义的提交日志方面起着至关重要的作用，尤其是与常规提交规范等约定结合使用时。本节提供了有关如何安装、配置和使用 commitlint 在本地检查提交消息的全面指南，从而促进规范的版本控制和协作方法。
 
 \mySubsubsection{14.3.1}{安装}
 
-Commitlint 通常通过 npm（Node.js 的包管理器）安装。首先，您需要在开发机器上安装 No de.js 和 npm。设置完成后，您可以在项目的根目录中运行以下命令来安装 commitlint 及其常规配置包：
+Commitlint 通常通过 npm(Node.js 的包管理器)安装。首先，需要在开发机器上安装 Node.js 和 npm。设置完成后，可以在项目的根目录中运行以下命令来安装 commitlint 及其常规配置包：
 
 \begin{shell}
 npm install --save-dev @commitlint/{cli,config-conventional,promptcli}
 \end{shell}
 
-此命令将 commitlint 和常规提交配置作为开发依赖项安装到您的项目中，使其可在本地开发环境中使用。
+此命令将 commitlint 和常规提交配置作为开发依赖项安装到项目中，使其可在本地开发环境中使用。
 
 \mySubsubsection{14.3.2}{配置}
 
-安装后， commitlint 需要一个配置文件来定义它将执行的规则。配置 commitlint 最直接的方法是使用常规提交配置，它符合常规提交规范。在项目的根目录中创建一个名为 commitlint.
-config.js 的文件，并添加以下内容：
+安装后， commitlint 需要一个配置文件来定义它将执行的规则。配置 commitlint 最直接的方法是使用常规提交配置，它符合常规提交规范。在项目的根目录中创建一个名为 commitlint.config.js 的文件，并添加以下内容：
 
 \begin{shell}
 module.exports = {extends: ['@commitlint/config-conventional']};
@@ -24,7 +23,7 @@ module.exports = {extends: ['@commitlint/config-conventional']};
 
 \mySubsubsection{14.3.3}{本地使用}
 
-要在本地检查提交消息，您可以将 commitlint 与管理 Git 钩子的工具 Husky 结合使用。可以配置 Husky 以触发 commitlint 在提交之前评估提交消息，从而向开发人员提供即时反馈。
+要在本地检查提交消息，可以将 commitlint 与管理 Git 钩子的工具 Husky 结合使用。可以配置 Husky 以触发 commitlint 在提交之前评估提交消息，从而向开发人员提供即时反馈。
 
 首先，安装 Husky 作为开发依赖项：
 
@@ -32,14 +31,13 @@ module.exports = {extends: ['@commitlint/config-conventional']};
 npm install --save-dev husky
 \end{shell}
 
-让我们用 commitlint 检查本地提交：
+用 commitlint 检查本地提交：
 
 \begin{shell}
 npx commitlint --from HEAD~1 --to HEAD --verbose
 ⧗ input: feat: add output
 ✔ found 0 problems, 0 warnings
 \end{shell}
-
 
 在此示例中， -{}-from HEAD~1 和 -{}-to HEAD 指定要检查的提交范围，而 -{}-verbose 提供详细输出。如果提交消息不符合指定的约定， commitlint 将输出错误消息，指出需要解决的违规行为。
 
@@ -57,7 +55,7 @@ npx commitlint --from HEAD~1 --to HEAD --verbose
 commitlint/#what-is-commitlint
 \end{shell}
 
-可以通过将以下配置添加到你的 package.json 文件或创建具有相同内容的 .huskyrc 文件将 C ommitlint 集成为 Git hook：
+可以通过将以下配置添加到 package.json 文件，或创建具有相同内容的 .huskyrc 文件将 Commitlint 集成为 Git hook：
 
 \begin{shell}
 "husky": {
@@ -71,11 +69,11 @@ commitlint/#what-is-commitlint
 
 \mySubsubsection{14.3.4}{自定义规则}
 
-Commitlint 提供多种配置和自定义选项，允许团队定制提交消息验证规则以适应其特定的项目要求和工作流程。这种灵活性确保 commitlint 可以适应支持标准常规提交格式以外的各种提交约定，从而提供一个强大的框架，用于在不同的开发环境中强制执行一致且有意义的提交消息。
+Commitlint 提供多种配置和自定义选项，允许团队定制提交消息验证规则，以适应其特定的项目要求和工作流程。这种灵活性确保 commitlint 可以适应支持标准常规提交格式以外的各种提交约定，从而提供一个强大的框架，用于在不同的开发环境中强制执行一致且有意义的提交消息。
 
 \mySubsubsection{14.3.5}{基本配置}
 
-commitlint 的基本配置包括在项目的根目录中设置 commitlint.config.js 文件。此文件是定义commitlint 将强制执行的规则和约定的中心点。最简单的配置可能会扩展一组预定义的规则，例如 @commitlint/config-conventional 提供的规则，如下所示：
+commitlint 的基本配置包括在项目的根目录中设置 commitlint.config.js 文件。此文件是定义commitlint 将强制执行的规则和约定的中心点。最简单的配置可能会扩展一组预定义的规则，例如 @commitlint/config-conventional 提供的规则：
 
 \begin{shell}
 module.exports = {
@@ -87,20 +85,20 @@ module.exports = {
 
 \mySubsubsection{14.3.6}{自定义规则配置}
 
-Commitlint 的真正强大之处在于它能够自定义规则以满足特定项目需求。 commitlint 中的每条规则都由一个字符串键标识，并可以使用一个数组进行配置，该数组指定规则的级别、 适用性，在某些情况下还可以指定其他选项或值。规则配置数组通常遵循 [level, applicability, value] 格式：
+Commitlint 的真正强大之处在于，能够自定义规则以满足特定项目需求。 commitlint 中的每条规则都由一个字符串键标识，并可以使用一个数组进行配置，该数组指定规则的级别、 适用性，还可以指定其他选项或值。规则配置数组通常遵循 [level, applicability, value] 格式：
 
 \begin{itemize}
 \item
-Level：确定违规的严重程度（0 = 禁用、 1 = 警告和 2 = 错误）
+Level：确定违规的严重程度(0 = 禁用、 1 = 警告和 2 = 错误)
 
 \item
-Applicability：指定是否应用规则（"始终"或"从不"）
+Applicability：指定是否应用规则(“始终”或“从不”)
 
 \item
 Value：规则的附加参数或选项，因规则而异
 \end{itemize}
 
-例如，为了强制提交消息必须以类型开头，后跟冒号和空格，您可以按如下方式配置 type-enum 规则：
+例如，为了强制提交消息必须以类型开头，后跟冒号和空格，可以按如下方式配置 type-enum 规则：
 
 \begin{shell}
 module.exports = {
@@ -111,11 +109,11 @@ module.exports = {
 };
 \end{shell}
 
-此配置将规则级别设置为错误（2），指定应始终应用该规则，并定义提交消息的可接受类型列表。
+此配置将规则级别设置为错误(2)，指定应始终应用该规则，并定义提交消息的可接受类型列表。
 
 \mySubsubsection{14.3.7}{范围和主题配置}
 
-Commitlint 还允许详细配置提交消息范围和主题。例如，您可以强制执行特定范围或要求提交消息主题不以句点结尾：
+Commitlint 还允许详细配置提交消息范围和主题。例如，可以强制执行特定范围或要求提交消息主题不以句点结尾：
 
 \begin{shell}
 module.exports = {
@@ -126,11 +124,11 @@ module.exports = {
 };
 \end{shell}
 
-此设置要求提交必须使用预定义范围之一，并且主题行不能以句点结尾。
+此设置要求提交必须使用预定义范围，并且主题行不能以句点结尾。
 
 \mySubsubsection{14.3.8}{自定义和共享配置}
 
-对于具有独特提交消息约定的项目或组织，可以定义自定义配置，并在需要时在多个项目之间共享。您可以为 commitlint 配置创建专用的 npm 包，让团队轻松扩展此共享配置：
+对于具有独特提交消息约定的项目或组织，可以定义自定义配置，并在需要时在多个项目之间共享。可以为 commitlint 配置创建专用的 npm 包，让团队轻松扩展此共享配置：
 
 \begin{shell}
 // commitlint-config-myorg.js
@@ -150,15 +148,15 @@ module.exports = {
 
 \mySubsubsection{14.3.9}{与 CI 集成}
 
-确保通过 CI 强制执行 commitlint 是维护整个项目中高质量提交消息的关键做法。虽然本地Git 钩子（例如由 Husky 管理的钩子）通过检查开发人员机器上的提交消息提供了第一道防线，但它们并非万无一失。开发人员可能会有意或无意地禁用 Git 钩子，并且集成开发环境(IDE) 或文本编辑器可能未正确配置以强制执行这些钩子，或者可能会遇到导致其故障的问题。
+确保通过 CI 强制执行 commitlint 是维护整个项目中高质量提交消息的关键做法。虽然本地Git 钩子(例如由 Husky 管理的钩子)通过检查开发人员机器上的提交消息提供了第一道防线，但这并非万无一失。开发人员可能会有意或无意地禁用 Git 钩子，并且集成开发环境(IDE) 或文本编辑器可能未正确配置以强制执行这些钩子，或者可能会遇到导致其故障的问题。
 
-鉴于本地执行中存在这些潜在差距， CI 充当了权威的真相来源，提供了一个集中、一致的平台，用于根据项目标准验证提交消息。通过将 commitlint 集成到 CI 管道中，项目可以确保每个提交（无论其来源或提交方法如何）在合并到主代码库之前都遵守定义的提交消息约定。这种基于 CI 的执行培养了一种纪律性和问责制的文化，确保所有贡献（无论其来源如何）都符合项目的质量标准。
+鉴于本地执行中存在这些潜在差距， CI 充当了权威的真相来源，提供了一个集中、一致的平台，用于根据项目标准验证提交消息。通过将 commitlint 集成到 CI 管道中，项目可以确保每个提交(无论其来源或提交方法如何)在合并到主代码库之前都遵守定义的提交消息约定。这种基于 CI 的执行培养了一种纪律性和问责制的文化，确保所有贡献(无论其来源如何)都符合项目的质量标准。
 
 \mySamllsectionNoContent{使用 GitHub Actions 将 commitlint 集成到 CI 中}
 
-GitHub Actions 提供了一个简单而强大的平台，可将 commitlint 集成到您的 CI 工作流程中。以下示例演示了如何设置 GitHub 操作，以在针对主分支的每个推送或拉取请求上使用 co mmitlint 强制执行提交消息标准。
+GitHub Actions 提供了一个简单而强大的平台，可将 commitlint 集成到 CI 工作流程中。以下示例演示了如何设置 GitHub 操作，以在针对主分支的每个推送或拉取请求上使用 commitlint 强制执行提交消息标准。
 
-首先，在您的存储库中的 .github/workflows/commitlint.yml 下创建一个新文件，内容如下：
+首先，在库中的 .github/workflows/commitlint.yml 下创建一个新文件，内容如下：
 
 \begin{shell}
 name: Commitlint
@@ -185,27 +183,27 @@ jobs:
                 failOnWarnings: true
 \end{shell}
 
-此工作流定义了一个名为 commitlint 的作业，该作业在向主分支推送和拉取请求时触发。我唯一想强调的配置是 failOnWarnings: true，它将操作配置为在遇到任何 commitlint 警告时使作业失败。这通过将警告视为与错误相同的严重性来确保严格遵守提交消息标准。
+此工作流定义了一个名为 commitlint 的作业，该作业在向主分支推送和拉取请求时触发。我想强调的配置是 failOnWarnings: true，将操作配置为在遇到任何 commitlint 警告时使作业失败。这通过将警告视为与错误相同的严重性来确保严格遵守提交消息标准。
 
-让我们创建一个错误的提交消息并打开一个 PR 来查看操作如何进行：
+来创建一个错误的提交消息，并打开一个 PR 来查看操作如何进行：
 
 \begin{shell}
-git commit -m"Changed output type"
+git commit -m "Changed output type"
 git checkout -b exit_message
 git push origin exit_message
 \end{shell}
 
-当我们开启一个 PR 之后，我们会看到操作失败了：
+当开启一个 PR 之后，就会看到操作失败了：
 
-\myGraphic{0.8}{content/chapter14/images/2.png}{图 14.2 – Commitlint 操作失败}
+\myGraphic{0.8}{content/chapter14/images/2.png}{图 14.2 --- Commitlint 操作失败}
 
 日志将以与本地检查相同的格式显示失败的原因：
 
-\myGraphic{0.8}{content/chapter14/images/3.png}{图 14.3 – Commitlint 操作日志失败}
+\myGraphic{0.8}{content/chapter14/images/3.png}{图 14.3 --- Commitlint 操作日志失败}
 
-通过将此工作流程纳入您的项目，您可以确保在提交成为主分支的一部分之前，每个提交都经过严格审查，以确保符合提交消息标准。这种基于 CI 的检查充当最终守门人，强调了结构良好的提交消息的重要性，并维护了项目提交历史的完整性。
+通过将此工作流程纳入项目，可以确保在提交成为主分支的一部分之前，每个提交都经过严格审查，以确保符合提交消息标准。这种基于 CI 的检查充当最终守门人，强调了结构良好的提交消息的重要性，并维护了项目提交历史的完整性。
 
-Commitlint 的可配置性和定制选项提供了一个强大的平台，用于强制执行针对项目或组织特定需求而定制的提交消息标准。通过利用这些功能，团队可以确保他们的提交日志保持清晰、一致和有意义，从而增强项目的可维护性和协作性。无论是遵守广泛接受的惯例（例如常规提交规范）还是定义一组自定义规则， commitlint 都能提供维护高质量提交历史记录所需的灵活性和控制力。
+Commitlint 的可配置性和定制选项提供了一个强大的平台，用于强制执行针对项目或组织特定需求而定制的提交消息标准。通过利用这些功能，团队可以确保他们的提交日志保持清晰、一致和有意义，从而增强项目的可维护性和协作性。无论是遵守广泛接受的惯例(例如常规提交规范)还是定义一组自定义规则， commitlint 都能提供维护高质量提交历史记录所需的灵活性和控制力。
 
 
 

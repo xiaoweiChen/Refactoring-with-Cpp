@@ -1,5 +1,5 @@
 
-导致代码质量低下的主要原因之一是对 C++ 缺乏了解。 C++ 是一种复杂且不断发展的语言，具有广泛的功能，要跟上其最新标准需要不断学习。不熟悉现代 C++ 实践的开发人员可能会无意中编写出效率低下或容易出错的代码。本节探讨了对 C++ 理解上的差距如何导致各种问题，并使用示例来说明常见的陷阱。
+导致代码质量低下的另一个主要原因是对 C++ 缺乏了解。 C++ 是一种复杂且不断发展的语言，具有广泛的功能，要跟上其最新标准需要不断学习。不熟悉现代 C++ 实践的开发人员，可能会无意中编写出效率低下或容易出错的代码。本节探讨了对 C++ 理解上的差距如何导致各种问题，并使用示例来说明常见的陷阱。
 
 以两位开发人员 Bob 和 Alice 为例。 Bob 对 C++ 的旧版本有丰富的经验，但尚未跟上最新更新，而 Alice 则精通现代 C++ 功能。
 
@@ -15,7 +15,7 @@ void process() {
 }
 \end{cpp}
 
-如果 delete[] 遗漏或与 new 错误匹配，此方法容易出现内存泄漏和未定义行为等错误。例如，如果在分配之后但在 delete[] 之前抛出异常，则内存将泄漏。熟悉现代 C++ 的 Alice 将使用 std::vector 来安全有效地管理内存：
+如果 delete[] 遗漏或与 new 错误匹配，此方法容易出现内存泄漏和未定义行为等错误。例如，在分配之后但在 delete[] 之前抛出异常，则内存将泄漏。熟悉现代 C++ 的 Alice 将使用 std::vector 来安全有效地管理内存：
 
 \begin{cpp}
 void process() {
@@ -49,7 +49,7 @@ std::make\_shared 将分配合并为单个内存块，从而提高性能和缓�
 
 \mySubsubsection{3.4.3}{高效使用移动语义}
 
-Bob 可能不完全理解移动语义以及它们如何在处理临时对象时提高性能。考虑一个将元素附加到 std::vector 的函数：
+Bob 可能不完全理解移动语义以及它们如何在处理临时对象时提高性能。考虑一个将元素添加到 std::vector 的函数：
 
 \begin{cpp}
 void append_data(std::vector<int>& target, const std::vector<int>&
@@ -71,7 +71,7 @@ void append_data(std::vector<int>& target, std::vector<int>&& source)
 }
 \end{cpp}
 
-通过使用 std::move， Alice 可以确保每个元素都被移动而不是复制，从而提高效率。此外，如果不再需要源， Alice 可能还会考虑对整个容器使用 std::move：
+通过使用 std::move， Alice 可以确保每个元素都被移动而不是复制，从而提高效率。此外，如果不再需要原始元素， Alice 可能还会考虑对整个容器使用 std::move：
 
 \begin{cpp}
 void append_data(std::vector<int>& target, std::vector<int>&& source)
@@ -109,7 +109,7 @@ private:
 };
 \end{cpp}
 
-将 get\_value 标记为 const 可保证它不会修改对象，从而使代码更清晰并防止意外修改。
+将 get\_value 标记为 const 可保证不会修改对象，从而使代码更清晰并防止意外修改。
 
 \mySubsubsection{3.4.5}{字符串处理效率低下}
 
@@ -121,7 +121,7 @@ strcpy(message, "Hello, world!");
 std::cout << message << std::endl;
 \end{cpp}
 
-这种方法容易出错，而且难以管理。 Alice 了解 std::string 的功能，因此简化了代码并避免了潜在的错误：
+这种方法容易出错，而且难以管理。 Alice 了解 std::string 的功能，简化了代码并避免了潜在的错误：
 
 \begin{cpp}
 std::string message = "Hello, world!";
@@ -132,7 +132,7 @@ std::cout << message << std::endl;
 
 \mySubsubsection{3.4.6}{lambda 表达式的未定义行为}
 
-C++11 中引入的 Lambda 函数提供了强大的功能，但如果使用不当，可能会导致未定义的行为。 Bob 可能会编写一个 lambda，通过引用捕获局部变量并返回它，从而导致悬空引用：
+C++11 中引入的 Lambda 函数提供了强大的功能，但如果使用不当，可能会导致未定义行为。 Bob 可能会编写一个 lambda，通过引用捕获局部变量并返回，从而导致悬空引用：
 
 \begin{cpp}
 auto create_lambda() {
@@ -144,7 +144,7 @@ auto lambda = create_lambda();
 int result = lambda(); // Undefined behavior
 \end{cpp}
 
-Alice 了解这些风险，因此通过值捕获变量以确保其仍然有效：
+Alice 了解这些风险，通过值捕获变量以确保其仍然有效：
 
 \begin{cpp}
 auto create_lambda() {
@@ -160,7 +160,7 @@ int result = lambda(); // Safe
 
 \mySubsubsection{3.4.7}{误解未定义的行为}
 
-Bob 可能会无意中编写出因依赖未初始化的变量而导致未定义行为的代码：
+Bob 可能会无意中编写出因依赖未初始化的变量，而导致未定义行为的代码：
 
 \begin{cpp}
 int sum() {
@@ -170,7 +170,7 @@ int sum() {
 }
 \end{cpp}
 
-访问未初始化的变量可能会导致不可预测的行为和难以调试的问题。 Alice 了解初始化的重要性，确保所有变量都已正确初始化：
+访问未初始化的变量，可能会导致不可预测的行为和难以调试的问题。 Alice 了解初始化的重要性，确保所有变量都已正确初始化：
 
 \begin{cpp}
 int sum() {
@@ -180,11 +180,11 @@ int sum() {
 }
 \end{cpp}
 
-正确初始化变量可以防止未定义的行为并使代码更可靠。
+正确初始化变量，可以避免未定义的行为，并使代码更可靠。
 
 \mySubsubsection{3.4.8}{滥用 C 风格数组}
 
-使用 C 样式数组可能会导致各种问题，例如缺乏边界检查和难以管理数组大小。请考虑以下示例，其中一个函数在堆栈上创建一个 C 数组并返回它：
+使用 C 样式数组可能会导致各种问题，例如：缺乏边界检查和难以管理数组大小。请考虑以下示例，其中一个函数在堆栈上创建一个 C 数组并返回它：
 
 \begin{cpp}
 int* create_array() {
@@ -193,7 +193,7 @@ int* create_array() {
 }
 \end{cpp}
 
-返回指向本地数组的指针会导致未定义的行为，因为函数返回时数组超出范围。更安全的方法是使用 std::array，它可以安全地从函数返回。它提供了 size 方法，并与 C++ 算法兼容，例如 std::sort：
+返回指向本地数组的指针会导致未定义的行为，函数返回时数组超出范围。更安全的方法是使用 std::array，可以安全地从函数返回。它提供了 size 方法，并与 C++ 算法兼容，例如 std::sort：
 
 \begin{cpp}
 std::array<int, 5> create_array() {

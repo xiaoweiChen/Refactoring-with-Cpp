@@ -1,13 +1,13 @@
 
-在 C++ 中，指针是语言的基本组成部分，允许直接访问和操作内存。然而，指针提供的灵活性也伴随着一定的风险和挑战。在这里，我们将探讨现代 C++ 技术如何增强指针安全性。
+C++ 中，指针是语言的基本组成部分，允许直接访问和操作内存。然而，指针提供的灵活性也伴随着一定的风险和挑战。这里，将探讨现代 C++ 技术如何增强指针安全性。
 
 \mySubsubsection{6.2.1}{原始指针的缺陷}
 
-原始指针虽然功能强大，但也可能成为一把双刃剑。它们不提供有关其指向的对象的所有权的信息，并且很容易成为"悬空"指针，指向已释放的内存。取消引用空指针或悬空指针会导致未定义的行为，从而导致难以诊断的错误。
+原始指针虽然功能强大，但也可能成为一把双刃剑。它们不提供有关其指向的对象的所有权的信息，并且很容易成为“悬空”指针，指向已释放的内存。取消引用空指针或悬空指针会导致未定义的行为，从而导致难以诊断的错误。
 
 \mySubsubsection{6.2.2}{使用GSL中的 not\_null}
 
-指南支持库 (GSL) 提供的 not\_null 包装器旨在克服与原始指针相关的挑战。通过使用 not\_null，您可以清楚地表明指针永远不应为空：
+指南支持库 (GSL) 提供的 not\_null 包装器旨在避免与原始指针相关的挑战。通过使用 not\_null，可以清楚地表明指针永远不应为空：
 
 \begin{cpp}
 #include <gsl/gsl>
@@ -16,7 +16,7 @@ void process_data(gsl::not_null<int*> data) {
 }
 \end{cpp}
 
-如果用户向此函数传递空指针，如下所示，应用程序将被终止：
+如果用户向此函数传递空指针，应用程序将终止：
 
 \begin{cpp}
 int main() {
@@ -26,7 +26,7 @@ int main() {
 }
 \end{cpp}
 
-但是，如果将指针作为 process\_data(nullptr) 传递，应用程序将在编译时失败：
+但将指针作为 process\_data(nullptr) 传递，应用程序将在编译时失败：
 
 \begin{shell}
 source>: In function 'int main()':
@@ -41,15 +41,15 @@ note: declared here
       | ^~~~~~~~
 \end{shell}
 
-这通过早期捕获潜在的空指针错误来促进代码的健壮性，从而减少运行时错误。
+通过早期捕获潜在的空指针错误来促进代码的健壮性，从而减少运行时错误。
 
 \mySamllsectionNoContent{将 not\_null 扩展为智能指针}
 
-gsl::not\_null 不仅限于原始指针；它还可以与智能指针(如 std::unique\_ptr 和 std::shared\_ptr )一起使用。这允许您将现代内存管理的优势与 not\_null 提供的额外安全保障结合起来。
+gsl::not\_null 不仅限于原始指针；还可以与智能指针(如 std::unique\_ptr 和 std::shared\_ptr )一起使用。这允许将现代内存管理的优势与 not\_null 提供的安全保障结合起来。
 
 \mySamllsectionNoContent{使用 std::unique\_ptr}
 
-std::unique\_ptr 确保动态分配对象的所有权是唯一的，并且当不再需要该对象时会自动删除该对象。通过将 not\_null 与 unique\_ptr 一起使用，您还可以确保指针永远不会为空：
+std::unique\_ptr 确保动态分配对象的所有权唯一，并且当不再需要该对象时会自动删除该对象。通过将 not\_null 与 unique\_ptr 一起使用，还可以确保指针永远不会为空：
 
 \begin{cpp}
 #include <gsl/gsl>
@@ -67,7 +67,7 @@ int main() {
 
 \mySamllsectionNoContent{使用 std::shared\_ptr}
 
-类似地，gsl::not\_null 可以与 std::shared\_ptr 一起使用，从而实现对象的共享所有权。这样您就可以编写接受共享指针的函数，而不必担心 null 性：
+类似地，gsl::not\_null 可以与 std::shared\_ptr 一起使用，从而实现对象的共享所有权。这样就可以编写接受共享指针的函数，而不必担心为 null ：
 
 \begin{cpp}
 #include <gsl/gsl>
@@ -83,11 +83,11 @@ int main() {
 }
 \end{cpp}
 
-这些示例展示了 not\_null 如何与现代 C++ 内存管理技术无缝集成。通过强制指针(无论是原始指针还是智能指针)不能为空，您可以进一步降低运行时错误的可能性，并使代码更加健壮和富有表现力。
+这些示例展示了 not\_null 如何与现代 C++ 内存管理技术无缝集成。通过强制指针(无论是原始指针还是智能指针)不能为空，可以进一步降低运行时错误的可能性，并使代码更加健壮和富有表现力。
 
 \mySubsubsection{6.2.3}{利用 std::optional 获取可选值}
 
-有时，指针用于指示可选值，其中 nullptr 表示没有值。 C++17 引入了 std::optional，它提供了一种类型安全的方式来表示可选值：
+有时，指针用于指示可选值，其中 nullptr 表示没有值。 C++17 引入了 std::optional，提供了一种类型安全的方式来表示可选值：
 
 \begin{cpp}
 #include <optional>
@@ -99,7 +99,7 @@ std::optional<int> fetch_data() {
 }
 \end{cpp}
 
-使用 std::optional 提供了清晰的语义并避免了为此目的使用指针所带来的陷阱。
+使用 std::optional 提供了清晰的语义，并避免了为此目的使用指针所带来的陷阱。
 
 \mySubsubsection{6.2.4}{原始指针与 nullptr 的比较}
 
@@ -114,14 +114,15 @@ int* findValue() {
 }
 \end{cpp}
 
-此代码可能会导致混乱和错误，尤其是当调用者忘记检查 nullptr 时。通过使用 not\_null 和 std::optional，您可以使代码更具表现力且更不容易出错。
+此代码可能会导致混乱和错误，尤其是当调用者忘记检查 nullptr 时。通过使用 not\_null 和 std::optional，可以使代码更具表现力且更不容易出错。
 
 \mySubsubsection{6.2.5}{利用 std::expected 获得预期结果和错误}
 
-虽然 std::optional 可以优雅地表示可选值，但有时您需要传达有关值缺失原因的更多信息。
-在这种情况下， std::expected 提供了一种返回值或错误代码的方法，使代码更具表现力，错误处理更加稳健。
+虽然 std::optional 可以优雅地表示可选值，但有时需要传达有关值缺失原因的更多信息。
 
-考虑这样一种情况：您有一个从网络检索值的函数，并且您想要处理网络错误。您可以为各种网络错误定义一个枚举：
+这种情况下， std::expected 提供了一种返回值或错误代码的方法，使代码更具表现力，错误处理更加稳健。
+
+考虑这样一种情况：有一个从网络检索值的函数，并且想要处理网络错误。可以为各种错误定义一个枚举：
 
 \begin{cpp}
 enum class NetworkError {
@@ -131,7 +132,7 @@ enum class NetworkError {
 };
 \end{cpp}
 
-然后，您可以使用 std::expected 定义一个返回 int 值或 NetworkError 的函数：
+然后，可以使用 std::expected 定义一个返回 int 值或 NetworkError 的函数：
 
 \begin{cpp}
 #include <expected>
@@ -170,9 +171,9 @@ int main() {
 }
 \end{cpp}
 
-在这里， std::expected 捕获成功案例和各种错误场景，从而实现清晰且类型安全的错误处理。此示例说明了现代 C++ 类型(例如 std::expected)如何增强表达能力和安全性，让您能够编写更准确地模拟复杂操作的代码。
+std::expected 捕获成功案例和各种错误场景，从而实现清晰且类型安全的错误处理。此示例说明了现代 C++ 类型(例如 std::expected)如何增强表达能力和安全性，能够编写更准确地模拟复杂操作的代码。
 
-通过采用这些现代的 C++ 工具，您可以增强代码中的指针安全性，减少错误并明确您的意图。
+通过采用这些现代的 C++ 工具，可以增强代码中的指针安全性，减少错误并明确意图。
 
 
 

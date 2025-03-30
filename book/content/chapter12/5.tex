@@ -1,6 +1,6 @@
 我们将演示如何将 Google Test 合并到 CMake 项目中，并提供分步指南来配置 CMake 与 Google Test 配合使用以在 C++ 项目中进行单元测试。
 
-首先，确保 Google Test 已包含在您的项目中。这可以通过将 Google Test 添加为项目存储库中的子模块或通过 CMake 下载来实现。一旦 Google Test 成为项目的一部分，下一步就是配置 CMakeLists.txt 文件以在构建过程中包含 Google Test。
+首先，确保 Google Test 已包含在项目中。这可以通过将 Google Test 添加为项目存储库中的子模块或通过 CMake 下载来实现。当 Google Test 成为项目的一部分，下一步就是配置 CMakeLists.txt 文件以在构建过程中包含 Google Test。
 
 下面是如何配置 CMakeLists.txt 文件以通过子模块集成 Google Test 的示例：
 
@@ -35,11 +35,11 @@ add_executable(my_tests test1.cpp test2.cpp)
 target_link_libraries(my_tests gtest gtest_main gmock gmock_main)
 \end{cmake}
 
-在此配置中， add\_subdirectory(external/googletest) 告诉 CMake 在构建中包含 Google Test。 include\_directories 确保 Google Test 标头可供您的测试文件访问。 add\_executable 为您的测试定义一个新的可执行文件， target\_link\_libraries 将 Google Test 库链接到您的测试可执行文件。
+此配置中， add\_subdirectory(external/googletest) 告诉 CMake 在构建中包含 Google Test。 include\_directories 确保 Google Test 头文件可供测试文件访问。 add\_executable 为测试定义一个新的可执行文件， target\_link\_libraries 将 Google Test 库链接到可执行的测试文件。
 
-配置 CMakeLists.txt 后，您可以使用 CMake 和 make 命令构建和运行测试。此设置不仅将 Google Test 集成到您的项目中，还利用 CMake 的测试功能自动运行测试。
+配置 CMakeLists.txt 后，可以使用 CMake 和 make 命令构建和运行测试。此设置不仅将 Google Test 集成到项目中，还能利用 CMake 的测试功能自动运行测试。
 
-以下代码片段演示了配置 CMake 以使用 Google Test 的另一种方法，即通过 CMake 的 Fetch Content 模块下载 Google Test。此方法允许 CMake 在构建过程中下载 Google Test，从而确保自动管理项目的依赖项：
+以下代码演示了配置 CMake 以使用 Google Test 的另一种方法，即通过 CMake 的 Fetch Content 模块下载 Google Test。此方法允许 CMake 在构建过程中下载 Google Test，从而确保自动管理项目的依赖项：
 
 \begin{cmake}
 cmake_minimum_required(VERSION 3.14)
@@ -54,12 +54,13 @@ FetchContent_Declare(
     googletest
     URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
 )
+
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 \end{cmake}
 
-虽然此示例侧重于将 Google Test 与 CMake 集成，但值得注意的是， Google Test 用途广泛，也可以集成到其他构建系统中，例如 Google 自己的 Bazel。对于使用不同构建系统的项目或更复杂的配置，请参阅官方 Google Test 文档，获取全面的指导和最佳实践。此文档提供了有关在各种环境和构建系统中利用 Google Test 的宝贵见解，确保您无论采用何种开发设置，都可以在 C++ 项目中有效地实施单元测试。
+虽然此示例侧重于将 Google Test 与 CMake 集成，但 Google Test 用途广泛，也可以集成到其他构建系统中，例如 Google 的 Bazel。对于使用不同构建系统的项目或更复杂的配置，请参阅官方 Google Test 文档，获取全面的指导和最佳实践。此文档提供了有关在各种环境和构建系统中利用 Google Test 的宝贵见解，确保无论采用何种开发设置，都可以在 C++ 项目中有效地进行单元测试。
 
 
 

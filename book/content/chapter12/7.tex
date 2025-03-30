@@ -1,4 +1,4 @@
-可以使用 TEST 宏编写 Google Test 中的简单测试，该宏定义一个测试函数。在此函数中，您可以使用各种断言来验证代码的行为。这是一个基本示例：
+可以使用 TEST 宏编写 Google Test 中的简单测试，该宏定义一个测试函数。函数中，可以使用各种断言来验证代码的行为。这是一个简单示例：
 
 \begin{shell}
 #include <gtest/gtest.h>
@@ -12,8 +12,8 @@ TEST(AdditionTest, HandlesPositiveNumbers) {
 }
 \end{shell}
 
-在此示例中， EXPECT\_EQ 用于断言 add 函数返回两个正数的预期和。 Google Test 提供了多种断言，例如 EXPECT\_GT（大于）、 EXPECT\_TRUE（布尔真）以及许多其他适用于不同测试场景的断言。
+此示例中， EXPECT\_EQ 用于断言 add 函数返回两个正数的预期和。 Google Test 提供了多种断言，例如 EXPECT\_GT(大于)、 EXPECT\_TRUE(布尔真)，以及许多其他适用于不同测试场景的断言。
 
-EXPECT\_* 和 ASSERT\_* 断言之间的主要区别在于它们在失败时的行为。虽然 EXPECT\_* 断言允许测试在失败后继续运行，但 ASSERT\_* 断言会在失败时立即停止当前测试功能。
+EXPECT\_* 和 ASSERT\_* 断言之间的主要区别在于其在失败时的行为。虽然 EXPECT\_* 断言允许测试在失败后继续运行，但 ASSERT\_* 断言会在失败时立即停止当前测试功能。
 
 当测试的后续行不依赖于当前断言的成功时，请使用 EXPECT\_*；当断言失败会使测试的继续变得毫无意义或可能导致错误时，请使用 ASSERT\_*。
