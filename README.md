@@ -1,6 +1,4 @@
-# C++代码重构之道
-
-*现代高效应用开发实践*
+# 以重构为名，开发现代高效C++应用
 
 <a href=""><img src="cover.png" height="256px" align="right"></a>
 
