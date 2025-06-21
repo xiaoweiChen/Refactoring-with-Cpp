@@ -13,7 +13,8 @@
 
 > [!NOTE]
 > 译版在Release中提供生成好的PDF文件以供下载，若需要其他格式请自行安装第三方工具(比如：Calibre)进行转换
->
+
+> [!TIP]
 > 译文的LaTeX 环境配置：https://www.cnblogs.com/1625--H/p/11524968.html
 >
 >  * 禁用拼写检查：https://blog.csdn.net/weixin_39278265/article/details/87931348
@@ -26,7 +27,7 @@
 >
 >  * Latex中的中文字体([思源宋体](https://github.com/notofonts/noto-cjk/releases))和英文字体([Hack](https://github.com/source-foundry/Hack-windows-installer/releases/tag/v1.6.0))，需要安装后自行配置。如何配置请参考主book/css.tex顶部关于字体的信息。
 >
->* vscode中配置LaTeX：https://blog.csdn.net/Ruins_LEE/article/details/123555016
+> vscode中配置LaTeX：https://blog.csdn.net/Ruins_LEE/article/details/123555016
 
 ## 本书概述
 
