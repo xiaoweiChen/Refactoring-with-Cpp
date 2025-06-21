@@ -11,6 +11,23 @@
 >
 > — 云风，程序员修炼之道第2版译者
 
+> [!NOTE]
+> 译版在Release中提供生成好的PDF文件以供下载，若需要其他格式请自行安装第三方工具(比如：Calibre)进行转换
+>
+> 译文的LaTeX 环境配置：https://www.cnblogs.com/1625--H/p/11524968.html
+>
+>  * 禁用拼写检查：https://blog.csdn.net/weixin_39278265/article/details/87931348
+>
+>  * 使用xelatex编译时需要添加`-shell-escape`和`-8bit`选项，例如：
+>
+>    `xelatex -synctex=1 -interaction=nonstopmode -shell-escape -8bit "book".tex`
+>
+>  * 为了内容中表格和目录索引能正常生成，至少需要连续编译两次
+>
+>  * Latex中的中文字体([思源宋体](https://github.com/notofonts/noto-cjk/releases))和英文字体([Hack](https://github.com/source-foundry/Hack-windows-installer/releases/tag/v1.6.0))，需要安装后自行配置。如何配置请参考主book/css.tex顶部关于字体的信息。
+>
+>* vscode中配置LaTeX：https://blog.csdn.net/Ruins_LEE/article/details/123555016
+
 ## 本书概述
 
 **关于本书**
@@ -47,17 +64,5 @@ Dmitry最初来自乌克兰敖德萨，并在那里从敖德萨国立理工大�
 
 * Github翻译地址：https://github.com/xiaoweiChen/Refactoring-with-Cpp
 
-* 译文的LaTeX 环境配置：https://www.cnblogs.com/1625--H/p/11524968.html
 
-  * 禁用拼写检查：https://blog.csdn.net/weixin_39278265/article/details/87931348
-
-  * 使用xelatex编译时需要添加`-shell-escape`和`-8bit`选项，例如：
-
-    `xelatex -synctex=1 -interaction=nonstopmode -shell-escape -8bit "book".tex`
-
-  * 为了内容中表格和目录索引能正常生成，至少需要连续编译两次
-
-  * Latex中的中文字体([思源宋体](https://github.com/notofonts/noto-cjk/releases))和英文字体([Hack](https://github.com/source-foundry/Hack-windows-installer/releases/tag/v1.6.0))，需要安装后自行配置。如何配置请参考主book/css.tex顶部关于字体的信息。
-
-* vscode中配置LaTeX：https://blog.csdn.net/Ruins_LEE/article/details/123555016
 
